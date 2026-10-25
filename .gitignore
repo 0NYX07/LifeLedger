@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+/.pnp
+.pnp.js
+
+# Environment variables
+.env
+.env.*
+*.env
+
+# Production build outputs
+dist/
+build/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+*.log
+
+# Editor directories and files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+
+# Documentation files to ignore
+/prd.md
+/architecture.md
+/rules.md
+/phases.md
+/memory.md
+/PRD.md
+/ARCHITECTURE.md
+/RULES.md
+/PHASES.md
+/MEMMORY.md

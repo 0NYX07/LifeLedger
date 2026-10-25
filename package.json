@@ -1,11 +1,22 @@
 {
   "name": "lifeledger",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "LifeLedger - Personal Life Administration Web Application",
+  "main": "server/src/server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "server": "npm --prefix server run dev",
+    "server:start": "npm --prefix server start",
+    "client": "npm --prefix client run dev",
+    "client:build": "npm --prefix client run build",
+    "test": "npm --prefix server test",
+    "build": "npm --prefix client run build"
   },
-  "keywords": [],
-  "type": "commonjs"
+  "keywords": [
+    "lifeledger",
+    "mern",
+    "obligations",
+    "finance"
+  ],
+  "author": "",
+  "license": "ISC"
 }
