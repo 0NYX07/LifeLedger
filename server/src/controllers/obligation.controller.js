@@ -5,7 +5,11 @@ const { calculateUrgency, evaluateMoneyLeak } = require('../services/obligation.
 const { logActivity } = require('../services/activity.service');
 const { createLifecycleNotification } = require('../services/notification.service');
 const { computeNextDueDate } = require('../utils/recurrence');
-const { deleteFile, UPLOAD_ROOT } = require('../config/storage');
+const {
+  uploadAttachmentFile,
+  getAttachmentAccessUrl,
+  deleteAttachmentAsset
+} = require('../services/storage.service');
 
 // Allowlists for creating and updating obligations
 const ALLOWED_FIELDS = [
@@ -398,15 +402,10 @@ const deleteObligation = async (req, res, next) => {
       });
     }
 
-    // Clean up any attachment files from disk
+    // Clean up any attachment assets from Cloudinary or local disk
     if (obligation.attachments && obligation.attachments.length > 0) {
       for (const att of obligation.attachments) {
-        if (att.storagePath) {
-          const resolvedPath = path.resolve(att.storagePath);
-          if (resolvedPath.startsWith(path.resolve(UPLOAD_ROOT))) {
-            await deleteFile(resolvedPath);
-          }
-        }
+        await deleteAttachmentAsset(att);
       }
     }
 
@@ -433,15 +432,16 @@ const deleteObligation = async (req, res, next) => {
 
 /**
  * Feature A: Secure Document Attachments
- * Upload an attachment to an owned obligation
+ * Upload an attachment to an owned obligation via Cloudinary
  * POST /api/obligations/:id/attachments
  */
 const uploadAttachment = async (req, res, next) => {
+  let uploadedAsset = null;
   try {
     const userId = req.user.id;
     const obligationId = req.params.id;
 
-    if (!req.file) {
+    if (!req.file || !req.file.buffer) {
       return res.status(400).json({
         success: false,
         message: 'No file uploaded or file was rejected by format filter'
@@ -454,26 +454,34 @@ const uploadAttachment = async (req, res, next) => {
     });
 
     if (!obligation) {
-      // Clean up the temporarily written file if the target obligation does not exist
-      await deleteFile(req.file.path);
       return res.status(404).json({
         success: false,
         message: 'Obligation not found'
       });
     }
 
-    const attachmentData = {
-      filename: req.file.filename,
+    // Upload file buffer to Cloudinary
+    uploadedAsset = await uploadAttachmentFile({
+      buffer: req.file.buffer,
+      userId,
       originalName: req.file.originalname,
       mimeType: req.file.mimetype,
-      size: req.file.size,
-      storagePath: req.file.path,
-      url: `/api/obligations/${obligation._id}/attachments`,
-      uploadedAt: new Date()
-    };
+      size: req.file.size
+    });
 
-    obligation.attachments.push(attachmentData);
-    await obligation.save();
+    uploadedAsset.url = `/api/obligations/${obligation._id}/attachments`;
+
+    obligation.attachments.push(uploadedAsset);
+
+    try {
+      await obligation.save();
+    } catch (saveErr) {
+      // Roll back Cloudinary asset if MongoDB save fails
+      if (uploadedAsset) {
+        await deleteAttachmentAsset(uploadedAsset);
+      }
+      throw saveErr;
+    }
 
     const createdAttachment = obligation.attachments[obligation.attachments.length - 1];
 
@@ -497,8 +505,8 @@ const uploadAttachment = async (req, res, next) => {
       message: 'Document attached successfully'
     });
   } catch (err) {
-    if (req.file && req.file.path) {
-      await deleteFile(req.file.path);
+    if (uploadedAsset) {
+      await deleteAttachmentAsset(uploadedAsset);
     }
     next(err);
   }
@@ -526,24 +534,30 @@ const viewAttachment = async (req, res, next) => {
     }
 
     const attachment = obligation.attachments.id(attachmentId);
-    if (!attachment || !attachment.storagePath || !fs.existsSync(attachment.storagePath)) {
+    if (!attachment) {
       return res.status(404).json({
         success: false,
         message: 'Attachment file not found'
       });
     }
 
-    const resolvedPath = path.resolve(attachment.storagePath);
-    if (!resolvedPath.startsWith(path.resolve(UPLOAD_ROOT))) {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied: invalid storage path'
-      });
+    // 1. Cloudinary short-lived signed delivery access
+    const accessUrl = getAttachmentAccessUrl(attachment, { isDownload: false });
+    if (accessUrl) {
+      return res.redirect(302, accessUrl);
     }
 
-    res.setHeader('Content-Type', attachment.mimeType || 'application/octet-stream');
-    res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(attachment.originalName)}"`);
-    res.sendFile(resolvedPath);
+    // 2. Legacy local storage fallback
+    if (attachment.storagePath && fs.existsSync(attachment.storagePath)) {
+      res.setHeader('Content-Type', attachment.mimeType || 'application/octet-stream');
+      res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(attachment.originalName)}"`);
+      return res.sendFile(path.resolve(attachment.storagePath));
+    }
+
+    return res.status(404).json({
+      success: false,
+      message: 'Attachment file not found'
+    });
   } catch (err) {
     next(err);
   }
@@ -571,22 +585,28 @@ const downloadAttachment = async (req, res, next) => {
     }
 
     const attachment = obligation.attachments.id(attachmentId);
-    if (!attachment || !attachment.storagePath || !fs.existsSync(attachment.storagePath)) {
+    if (!attachment) {
       return res.status(404).json({
         success: false,
         message: 'Attachment file not found'
       });
     }
 
-    const resolvedPath = path.resolve(attachment.storagePath);
-    if (!resolvedPath.startsWith(path.resolve(UPLOAD_ROOT))) {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied: invalid storage path'
-      });
+    // 1. Cloudinary short-lived signed download access
+    const accessUrl = getAttachmentAccessUrl(attachment, { isDownload: true });
+    if (accessUrl) {
+      return res.redirect(302, accessUrl);
     }
 
-    res.download(resolvedPath, attachment.originalName);
+    // 2. Legacy local storage fallback
+    if (attachment.storagePath && fs.existsSync(attachment.storagePath)) {
+      return res.download(path.resolve(attachment.storagePath), attachment.originalName);
+    }
+
+    return res.status(404).json({
+      success: false,
+      message: 'Attachment file not found'
+    });
   } catch (err) {
     next(err);
   }
@@ -621,13 +641,8 @@ const deleteAttachment = async (req, res, next) => {
       });
     }
 
-    // Clean up physical file on disk
-    if (attachment.storagePath) {
-      const resolvedPath = path.resolve(attachment.storagePath);
-      if (resolvedPath.startsWith(path.resolve(UPLOAD_ROOT))) {
-        await deleteFile(resolvedPath);
-      }
-    }
+    // Clean up asset from Cloudinary or local disk
+    await deleteAttachmentAsset(attachment);
 
     const originalName = attachment.originalName;
     obligation.attachments.pull(attachmentId);

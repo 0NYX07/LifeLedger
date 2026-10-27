@@ -17,10 +17,17 @@ const clearTestDB = async () => {
 };
 
 const closeTestDB = async () => {
-  await mongoose.connection.dropDatabase();
-  await mongoose.connection.close();
+  try {
+    if (mongoose.connection.readyState !== 0) {
+      await mongoose.connection.dropDatabase();
+      await mongoose.connection.close();
+    }
+  } catch (e) {
+    // ignore cleanup error
+  }
   if (mongoServer) {
-    await mongoServer.stop();
+    await mongoServer.stop({ doCleanup: true, force: true });
+    mongoServer = null;
   }
 };
 

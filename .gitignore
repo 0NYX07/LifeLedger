@@ -3,10 +3,13 @@ node_modules/
 /.pnp
 .pnp.js
 
-# Environment variables
+# Ignore real environment files
 .env
 .env.*
-*.env
+
+# Allow example environment files
+!.env.example
+!example.env
 
 # Production build outputs
 dist/

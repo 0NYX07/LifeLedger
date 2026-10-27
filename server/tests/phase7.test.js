@@ -74,21 +74,19 @@ describe('LifeLedger Phase 7 — Advanced Features Integration & Security Tests'
       assert.equal(uploadRes.body.data.mimeType, 'text/plain');
       const attachmentId = uploadRes.body.data._id;
 
-      // 3. View attachment inline (User A)
+      // 3. View attachment (User A gets short-lived signed redirect)
       const viewRes = await request(app)
         .get(`/api/obligations/${obligationId}/attachments/${attachmentId}/view`)
         .set('Authorization', `Bearer ${userAToken}`);
-      assert.equal(viewRes.status, 200);
-      assert.match(viewRes.headers['content-type'], /text\/plain/);
-      assert.match(viewRes.headers['content-disposition'], /inline/);
-      assert.equal(viewRes.text, fileContent);
+      assert.equal(viewRes.status, 302);
+      assert.ok(viewRes.headers.location, 'Must provide signed delivery redirect location');
 
-      // 4. Download attachment (User A)
+      // 4. Download attachment (User A gets short-lived signed download redirect)
       const downloadRes = await request(app)
         .get(`/api/obligations/${obligationId}/attachments/${attachmentId}/download`)
         .set('Authorization', `Bearer ${userAToken}`);
-      assert.equal(downloadRes.status, 200);
-      assert.match(downloadRes.headers['content-disposition'], /attachment/);
+      assert.equal(downloadRes.status, 302);
+      assert.ok(downloadRes.headers.location, 'Must provide signed download redirect location');
 
       // 5. User B CANNOT view or download User A attachment (404 without disclosure)
       const viewResB = await request(app)

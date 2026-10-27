@@ -1,17 +1,6 @@
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
-const crypto = require('crypto');
-
-// Base directory for private uploads
-const UPLOAD_ROOT = process.env.UPLOAD_DIR
-  ? path.resolve(process.env.UPLOAD_DIR)
-  : path.join(__dirname, '../../uploads');
-
-// Ensure base upload directory exists
-if (!fs.existsSync(UPLOAD_ROOT)) {
-  fs.mkdirSync(UPLOAD_ROOT, { recursive: true });
-}
 
 // Allowed MIME types and extensions
 const ALLOWED_MIME_TYPES = new Set([
@@ -34,22 +23,8 @@ const ALLOWED_EXTENSIONS = new Set([
 // 5MB default maximum file size
 const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE_BYTES, 10) || 5 * 1024 * 1024;
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    // Isolate storage per user to prevent cross-user directory contamination
-    const userDir = path.join(UPLOAD_ROOT, req.user.id.toString());
-    if (!fs.existsSync(userDir)) {
-      fs.mkdirSync(userDir, { recursive: true });
-    }
-    cb(null, userDir);
-  },
-  filename: (req, file, cb) => {
-    // Generate secure randomized storage filename with sanitized extension
-    const ext = path.extname(file.originalname).toLowerCase();
-    const randomName = `${Date.now()}-${crypto.randomBytes(12).toString('hex')}${ext}`;
-    cb(null, randomName);
-  }
-});
+// Use in-memory buffer storage for direct Cloudinary streaming without local disk footprints
+const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
   const ext = path.extname(file.originalname).toLowerCase();
@@ -71,7 +46,7 @@ const upload = multer({
 });
 
 /**
- * Safely delete a file from disk
+ * Safely delete a legacy local file from disk if present
  */
 const deleteFile = async (filePath) => {
   try {
@@ -84,10 +59,10 @@ const deleteFile = async (filePath) => {
 };
 
 module.exports = {
-  UPLOAD_ROOT,
   ALLOWED_MIME_TYPES,
   ALLOWED_EXTENSIONS,
   MAX_FILE_SIZE,
   upload,
   deleteFile
 };
+

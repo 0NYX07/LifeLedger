@@ -22,6 +22,15 @@ const attachmentSchema = new mongoose.Schema(
     mimeType: { type: String },
     size: { type: Number },
     storagePath: { type: String },
+    publicId: { type: String },
+    resourceType: { type: String, default: 'auto' },
+    deliveryType: { type: String, default: 'authenticated' },
+    format: { type: String },
+    storageProvider: {
+      type: String,
+      enum: ['cloudinary', 'local', 'mock_cloudinary'],
+      default: 'cloudinary'
+    },
     url: { type: String },
     uploadedAt: { type: Date, default: Date.now }
   },
@@ -31,6 +40,9 @@ const attachmentSchema = new mongoose.Schema(
 attachmentSchema.set('toJSON', {
   transform: (doc, ret) => {
     delete ret.storagePath;
+    delete ret.publicId;
+    delete ret.resourceType;
+    delete ret.deliveryType;
     return ret;
   }
 });

@@ -13,6 +13,7 @@ export const AttachmentModal = ({
   const [selectedFile, setSelectedFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [error, setError] = useState('');
   const fileInputRef = useRef(null);
 
@@ -75,6 +76,7 @@ export const AttachmentModal = ({
       onTriggerToast({ type: 'error', message: err.message || 'Failed to delete attachment' });
     } finally {
       setDeletingId(null);
+      setConfirmDeleteId(null);
     }
   };
 
@@ -216,18 +218,38 @@ export const AttachmentModal = ({
                           <Download className="w-3.5 h-3.5" />
                         </a>
 
-                        <button
-                          onClick={() => handleDelete(att._id)}
-                          disabled={deletingId === att._id}
-                          title="Delete Document"
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
-                        >
-                          {deletingId === att._id ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          ) : (
+                        {confirmDeleteId === att._id ? (
+                          <div className="flex items-center space-x-1.5 animate-in fade-in duration-100">
+                            <span className="text-[10px] text-rose-400 font-semibold mr-1">Delete file?</span>
+                            <button
+                              onClick={() => handleDelete(att._id)}
+                              disabled={deletingId === att._id}
+                              className="px-2 py-1 rounded bg-rose-600 hover:bg-rose-500 text-white text-[10px] font-bold transition-colors"
+                            >
+                              {deletingId === att._id ? (
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                              ) : (
+                                'Confirm'
+                              )}
+                            </button>
+                            <button
+                              onClick={() => setConfirmDeleteId(null)}
+                              disabled={deletingId === att._id}
+                              className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-medium transition-colors"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setConfirmDeleteId(att._id)}
+                            disabled={deletingId === att._id}
+                            title="Delete Document"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                          >
                             <Trash2 className="w-3.5 h-3.5" />
-                          )}
-                        </button>
+                          </button>
+                        )}
                       </div>
                     </div>
                   );
