@@ -11,6 +11,19 @@ const cloudinary = require('cloudinary').v2;
  * Configure Cloudinary with environment variables
  */
 const configureCloudinary = () => {
+  // Support CLOUDINARY_URL connection string if provided
+  const cloudinaryUrl = (process.env.CLOUDINARY_URL || '').trim();
+  if (cloudinaryUrl) {
+    try {
+      cloudinary.config(true);
+      const parsed = cloudinary.config();
+      if (parsed.cloud_name && parsed.api_key && parsed.api_secret) {
+        cloudinary.config({ secure: true });
+        return true;
+      }
+    } catch (_) {}
+  }
+
   const cloud_name = (process.env.CLOUDINARY_CLOUD_NAME || '').trim();
   const api_key = (process.env.CLOUDINARY_API_KEY || '').trim();
   const api_secret = (process.env.CLOUDINARY_API_SECRET || '').trim();
