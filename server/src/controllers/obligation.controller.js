@@ -5,7 +5,7 @@ const { calculateUrgency, evaluateMoneyLeak } = require('../services/obligation.
 const { logActivity } = require('../services/activity.service');
 const { createLifecycleNotification } = require('../services/notification.service');
 const { computeNextDueDate } = require('../utils/recurrence');
-const { deleteFile } = require('../config/storage');
+const { deleteFile, UPLOAD_ROOT } = require('../config/storage');
 
 // Allowlists for creating and updating obligations
 const ALLOWED_FIELDS = [
@@ -402,7 +402,10 @@ const deleteObligation = async (req, res, next) => {
     if (obligation.attachments && obligation.attachments.length > 0) {
       for (const att of obligation.attachments) {
         if (att.storagePath) {
-          await deleteFile(att.storagePath);
+          const resolvedPath = path.resolve(att.storagePath);
+          if (resolvedPath.startsWith(path.resolve(UPLOAD_ROOT))) {
+            await deleteFile(resolvedPath);
+          }
         }
       }
     }
@@ -530,9 +533,17 @@ const viewAttachment = async (req, res, next) => {
       });
     }
 
+    const resolvedPath = path.resolve(attachment.storagePath);
+    if (!resolvedPath.startsWith(path.resolve(UPLOAD_ROOT))) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied: invalid storage path'
+      });
+    }
+
     res.setHeader('Content-Type', attachment.mimeType || 'application/octet-stream');
     res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(attachment.originalName)}"`);
-    res.sendFile(path.resolve(attachment.storagePath));
+    res.sendFile(resolvedPath);
   } catch (err) {
     next(err);
   }
@@ -567,7 +578,15 @@ const downloadAttachment = async (req, res, next) => {
       });
     }
 
-    res.download(path.resolve(attachment.storagePath), attachment.originalName);
+    const resolvedPath = path.resolve(attachment.storagePath);
+    if (!resolvedPath.startsWith(path.resolve(UPLOAD_ROOT))) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied: invalid storage path'
+      });
+    }
+
+    res.download(resolvedPath, attachment.originalName);
   } catch (err) {
     next(err);
   }
@@ -604,7 +623,10 @@ const deleteAttachment = async (req, res, next) => {
 
     // Clean up physical file on disk
     if (attachment.storagePath) {
-      await deleteFile(attachment.storagePath);
+      const resolvedPath = path.resolve(attachment.storagePath);
+      if (resolvedPath.startsWith(path.resolve(UPLOAD_ROOT))) {
+        await deleteFile(resolvedPath);
+      }
     }
 
     const originalName = attachment.originalName;

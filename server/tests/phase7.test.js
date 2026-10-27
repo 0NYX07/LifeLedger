@@ -391,5 +391,163 @@ describe('LifeLedger Phase 7 — Advanced Features Integration & Security Tests'
         .set('Authorization', `Bearer ${userBToken}`);
       assert.equal(markBRes.status, 404);
     });
+
+    test('Generates due_today and due_soon notifications accurately', async () => {
+      const today = new Date().toISOString().split('T')[0];
+      const twoDaysOut = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+      await request(app)
+        .post('/api/obligations')
+        .set('Authorization', `Bearer ${userAToken}`)
+        .send({
+          title: 'Rent Payment',
+          category: 'bill',
+          dueDate: today,
+          amount: 12000
+        });
+
+      await request(app)
+        .post('/api/obligations')
+        .set('Authorization', `Bearer ${userAToken}`)
+        .send({
+          title: 'Car Insurance Renewal',
+          category: 'insurance',
+          dueDate: twoDaysOut,
+          amount: 8000
+        });
+
+      const notifRes = await request(app)
+        .get('/api/notifications')
+        .set('Authorization', `Bearer ${userAToken}`);
+
+      assert.equal(notifRes.status, 200);
+      const dueTodayNotif = notifRes.body.data.find((n) => n.type === 'due_today');
+      const dueSoonNotif = notifRes.body.data.find((n) => n.type === 'due_soon');
+
+      assert.ok(dueTodayNotif, 'Should generate due_today notification');
+      assert.ok(dueSoonNotif, 'Should generate due_soon notification');
+      assert.match(dueTodayNotif.title, /Due Today: Rent Payment/);
+      assert.match(dueSoonNotif.title, /Due Soon: Car Insurance Renewal/);
+    });
+  });
+
+  // ==========================================
+  // Edge Case Tests: Security, Projections & Immutability
+  // ==========================================
+  describe('Phase 7 Edge Case Validations', () => {
+    test('storagePath is never disclosed in upload, get, or list API responses', async () => {
+      const obsRes = await request(app)
+        .post('/api/obligations')
+        .set('Authorization', `Bearer ${userAToken}`)
+        .send({
+          title: 'Privacy Test Obligation',
+          category: 'bill',
+          dueDate: '2026-12-15'
+        });
+      const obligationId = obsRes.body.data._id;
+
+      const uploadRes = await request(app)
+        .post(`/api/obligations/${obligationId}/attachments`)
+        .set('Authorization', `Bearer ${userAToken}`)
+        .attach('file', Buffer.from('test secret path concealment'), 'doc.txt');
+
+      assert.equal(uploadRes.status, 201);
+      assert.equal(uploadRes.body.data.storagePath, undefined, 'storagePath must not be present in upload response');
+
+      const getRes = await request(app)
+        .get(`/api/obligations/${obligationId}`)
+        .set('Authorization', `Bearer ${userAToken}`);
+
+      assert.equal(getRes.status, 200);
+      assert.equal(getRes.body.data.attachments[0].storagePath, undefined, 'storagePath must not be present in get response');
+
+      const listRes = await request(app)
+        .get('/api/obligations')
+        .set('Authorization', `Bearer ${userAToken}`);
+
+      assert.equal(listRes.status, 200);
+      const item = listRes.body.data.find((o) => o._id === obligationId);
+      assert.equal(item.attachments[0].storagePath, undefined, 'storagePath must not be present in list response');
+    });
+
+    test('Financial summary properly derives projections from monthly & yearly recurrences and excludes completed/cancelled records', async () => {
+      // Monthly obligation: 500/mo
+      await request(app)
+        .post('/api/obligations')
+        .set('Authorization', `Bearer ${userAToken}`)
+        .send({
+          title: 'Streaming Sub',
+          category: 'subscription',
+          dueDate: '2026-11-01',
+          amount: 500,
+          recurrence: 'monthly'
+        });
+
+      // Yearly obligation: 6000/yr
+      await request(app)
+        .post('/api/obligations')
+        .set('Authorization', `Bearer ${userAToken}`)
+        .send({
+          title: 'Annual Cloud Hosting',
+          category: 'subscription',
+          dueDate: '2026-12-01',
+          amount: 6000,
+          recurrence: 'yearly'
+        });
+
+      // One-time obligation: 1000
+      const oneTimeRes = await request(app)
+        .post('/api/obligations')
+        .set('Authorization', `Bearer ${userAToken}`)
+        .send({
+          title: 'One-time Monitor',
+          category: 'purchase',
+          dueDate: '2026-11-15',
+          amount: 1000,
+          recurrence: 'none'
+        });
+
+      // Cancelled obligation: 4000 (must be ignored)
+      const cancelledRes = await request(app)
+        .post('/api/obligations')
+        .set('Authorization', `Bearer ${userAToken}`)
+        .send({
+          title: 'Cancelled Policy',
+          category: 'insurance',
+          dueDate: '2026-11-20',
+          amount: 4000,
+          recurrence: 'monthly'
+        });
+      await request(app)
+        .patch(`/api/obligations/${cancelledRes.body.data._id}/cancel`)
+        .set('Authorization', `Bearer ${userAToken}`);
+
+      const summaryRes = await request(app)
+        .get('/api/dashboard/summary')
+        .set('Authorization', `Bearer ${userAToken}`);
+
+      assert.equal(summaryRes.status, 200);
+      const fin = summaryRes.body.data.financialSummary;
+
+      // Monthly recurring = 500
+      assert.equal(fin.monthlyRecurring, 500);
+      // Annual estimate = 500 * 12 + 6000 = 12000
+      assert.equal(fin.annualEstimate, 12000);
+      // Total active exposure = 500 + 6000 + 1000 = 7500 (cancelled 4000 excluded)
+      assert.equal(fin.totalActiveExposure, 7500);
+    });
+
+    test('Activity endpoint forbids client manipulation (POST, PUT, DELETE return 404)', async () => {
+      const postRes = await request(app)
+        .post('/api/activity')
+        .set('Authorization', `Bearer ${userAToken}`)
+        .send({ action: 'fabricated', title: 'Fake Event' });
+      assert.equal(postRes.status, 404);
+
+      const deleteRes = await request(app)
+        .delete('/api/activity')
+        .set('Authorization', `Bearer ${userAToken}`);
+      assert.equal(deleteRes.status, 404);
+    });
   });
 });
