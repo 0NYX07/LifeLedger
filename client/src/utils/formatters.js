@@ -65,35 +65,35 @@ export const formatRelativeDeadline = (dueDate) => {
 export const CATEGORY_META = {
   subscription: {
     label: 'Subscription',
-    bg: 'bg-purple-950/60 text-purple-300 border-purple-500/30'
+    bg: 'bg-[#7C3AED]/20 text-[#C4B5FD] border border-[#7C3AED]/40'
   },
   bill: {
     label: 'Bill / Utility',
-    bg: 'bg-blue-950/60 text-blue-300 border-blue-500/30'
+    bg: 'bg-[#1D9BF0]/20 text-[#7DD3FC] border border-[#1D9BF0]/40'
   },
   purchase: {
     label: 'Purchase',
-    bg: 'bg-emerald-950/60 text-emerald-300 border-emerald-500/30'
+    bg: 'bg-[#25D366]/20 text-[#86EFAC] border border-[#25D366]/40'
   },
   'return-window': {
     label: 'Return Window',
-    bg: 'bg-amber-950/60 text-amber-300 border-amber-500/30'
+    bg: 'bg-[#F59E0B]/20 text-[#FCD34D] border border-[#F59E0B]/40'
   },
   warranty: {
     label: 'Warranty',
-    bg: 'bg-teal-950/60 text-teal-300 border-teal-500/30'
+    bg: 'bg-[#0D9488]/20 text-[#5EEAD4] border border-[#0D9488]/40'
   },
   insurance: {
     label: 'Insurance',
-    bg: 'bg-sky-950/60 text-sky-300 border-sky-500/30'
+    bg: 'bg-[#0284C7]/20 text-[#7DD3FC] border border-[#0284C7]/40'
   },
   'document-renewal': {
     label: 'Document Renewal',
-    bg: 'bg-rose-950/60 text-rose-300 border-rose-500/30'
+    bg: 'bg-[#E11D48]/20 text-[#FDA4AF] border border-[#E11D48]/40'
   },
   custom: {
     label: 'Custom',
-    bg: 'bg-slate-800 text-slate-300 border-slate-700'
+    bg: 'bg-[#293142] text-[#A0A8B7] border border-[#3B4559]'
   }
 };
 
@@ -103,27 +103,27 @@ export const CATEGORY_META = {
 export const URGENCY_META = {
   overdue: {
     label: 'Overdue',
-    bg: 'bg-red-500/20 text-red-400 border border-red-500/30'
+    bg: 'bg-[#E53945]/20 text-[#FCA5A5] border border-[#E53945]/40'
   },
   'due-today': {
     label: 'Due Today',
-    bg: 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+    bg: 'bg-[#F59E0B]/20 text-[#FCD34D] border border-[#F59E0B]/40'
   },
   'due-soon': {
     label: 'Due Soon',
-    bg: 'bg-orange-500/20 text-orange-300 border border-orange-500/30'
+    bg: 'bg-[#1D9BF0]/20 text-[#7DD3FC] border border-[#1D9BF0]/40'
   },
   upcoming: {
     label: 'Upcoming',
-    bg: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+    bg: 'bg-[#25D366]/20 text-[#86EFAC] border border-[#25D366]/40'
   },
   completed: {
     label: 'Completed',
-    bg: 'bg-slate-700/40 text-slate-400 border border-slate-600/30'
+    bg: 'bg-[#25D366]/15 text-[#86EFAC] border border-[#25D366]/30'
   },
   cancelled: {
     label: 'Cancelled',
-    bg: 'bg-zinc-800 text-zinc-500 border border-zinc-700/30'
+    bg: 'bg-[#293142] text-[#A0A8B7] border border-[#3B4559]'
   }
 };
 
@@ -133,14 +133,14 @@ export const URGENCY_META = {
 export const PRIORITY_META = {
   high: {
     label: 'High Priority',
-    color: 'text-rose-400 bg-rose-500/10 border-rose-500/20'
+    color: 'text-[#FCA5A5] bg-[#E53945]/20 border border-[#E53945]/40'
   },
   medium: {
     label: 'Medium Priority',
-    color: 'text-amber-400 bg-amber-500/10 border-amber-500/20'
+    color: 'text-[#FCD34D] bg-[#F59E0B]/20 border border-[#F59E0B]/40'
   },
   low: {
     label: 'Low Priority',
-    color: 'text-slate-400 bg-slate-500/10 border-slate-500/20'
+    color: 'text-[#A0A8B7] bg-[#293142] border border-[#3B4559]'
   }
 };

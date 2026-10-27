@@ -1,18 +1,20 @@
 import React from 'react';
-import { AlertTriangle, Clock, ArrowRight, CheckCircle2, ShieldAlert } from 'lucide-react';
-import { formatCurrency, formatDate } from '../utils/formatters';
+import { AlertTriangle, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { formatCurrency } from '../utils/formatters';
 
 export const MoneyLeakBanner = ({ alerts = [], onCompleteObligation, onSelectObligation }) => {
   if (!alerts || alerts.length === 0) {
     return (
-      <div className="glass-panel p-5 rounded-2xl border border-emerald-500/20 bg-emerald-950/20 flex items-center space-x-4">
-        <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
-          <CheckCircle2 className="w-6 h-6" />
+      <div className="bg-[#121620] border border-[#293142] p-4 sm:p-5 rounded-xl shadow-xs flex items-center space-x-3.5">
+        <div className="w-9 h-9 rounded-lg bg-[#25D366]/15 border border-[#25D366]/30 text-[#25D366] flex items-center justify-center shrink-0">
+          <CheckCircle2 className="w-5 h-5 stroke-[2.2]" />
         </div>
         <div>
-          <h4 className="text-sm font-semibold text-emerald-300">All Clear — No Imminent Money Leaks</h4>
-          <p className="text-xs text-slate-400 mt-0.5">
-            None of your active obligations are overdue or expiring within the next 7 days.
+          <h4 className="text-xs font-bold text-[#F5F7FA] uppercase tracking-wide">
+            All Clear — No Imminent Money Leaks
+          </h4>
+          <p className="text-xs text-[#A0A8B7] mt-0.5">
+            None of your active obligations are overdue or expiring within the next 7 days without attention.
           </p>
         </div>
       </div>
@@ -23,19 +25,19 @@ export const MoneyLeakBanner = ({ alerts = [], onCompleteObligation, onSelectObl
     <section className="space-y-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <div className="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20">
-            <ShieldAlert className="w-4 h-4" />
+          <div className="p-1.5 rounded-lg bg-[#E53945]/15 text-[#E53945] border border-[#E53945]/30">
+            <ShieldAlert className="w-4 h-4 stroke-[2.2]" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
-              Money Leak Detector
-              <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                {alerts.length} Attention Required
+            <h3 className="text-xs font-bold text-[#F5F7FA] uppercase tracking-wider flex items-center gap-2">
+              Money Leak Alert
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#E53945]/15 text-[#E53945] border border-[#E53945]/30">
+                {alerts.length} Action Required
               </span>
             </h3>
           </div>
         </div>
-        <span className="text-xs text-slate-400 hidden sm:inline">
+        <span className="text-[11px] text-[#A0A8B7] hidden sm:inline">
           Deterministic deadline and exposure warnings
         </span>
       </div>
@@ -48,82 +50,68 @@ export const MoneyLeakBanner = ({ alerts = [], onCompleteObligation, onSelectObl
           return (
             <div
               key={alert.obligationId}
-              className={`p-4 rounded-xl border backdrop-blur-md transition-all ${
+              className={`p-4 rounded-xl border bg-[#121620] shadow-xs transition-all hover:border-[#1D9BF0]/40 ${
                 isOverdue
-                  ? 'bg-rose-950/30 border-rose-500/40 hover:border-rose-500/60 shadow-lg shadow-rose-950/30'
-                  : isDueToday
-                  ? 'bg-amber-950/30 border-amber-500/40 hover:border-amber-500/60'
-                  : 'bg-orange-950/25 border-orange-500/30 hover:border-orange-500/50'
+                  ? 'border-l-4 border-l-[#E53945] border-t-[#293142] border-r-[#293142] border-b-[#293142]'
+                  : 'border-l-4 border-l-[#F59E0B] border-t-[#293142] border-r-[#293142] border-b-[#293142]'
               }`}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start space-x-3">
                   <div
-                    className={`p-2 rounded-lg shrink-0 mt-0.5 ${
+                    className={`p-1.5 rounded-lg shrink-0 mt-0.5 ${
                       isOverdue
-                        ? 'bg-rose-500/20 text-rose-400'
-                        : isDueToday
-                        ? 'bg-amber-500/20 text-amber-300'
-                        : 'bg-orange-500/20 text-orange-400'
+                        ? 'bg-[#E53945]/15 text-[#E53945]'
+                        : 'bg-[#F59E0B]/15 text-[#F59E0B]'
                     }`}
                   >
                     <AlertTriangle className="w-4 h-4" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-semibold text-white">{alert.title}</span>
+                      <span className="text-sm font-bold text-[#F5F7FA]">{alert.title}</span>
                       <span
-                        className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
+                        className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
                           isOverdue
-                            ? 'bg-rose-500/20 text-rose-300'
-                            : isDueToday
-                            ? 'bg-amber-500/20 text-amber-200'
-                            : 'bg-orange-500/20 text-orange-200'
+                            ? 'bg-[#E53945]/15 text-[#E53945] border-[#E53945]/30'
+                            : 'bg-[#F59E0B]/15 text-[#F59E0B] border-[#F59E0B]/30'
                         }`}
                       >
                         {alert.urgency.replace('-', ' ')}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-300 mt-1 font-medium">{alert.reason}</p>
+                    <p className="text-xs text-[#A0A8B7] mt-1">{alert.reason}</p>
                   </div>
                 </div>
 
                 {alert.amount != null && (
                   <div className="text-right shrink-0">
-                    <div className="text-sm font-bold text-white">
+                    <div className="text-sm font-bold text-[#F5F7FA]">
                       {formatCurrency(alert.amount, alert.currency)}
                     </div>
-                    <span className="text-[10px] text-slate-400 block max-w-[100px] leading-tight">
+                    <span className="text-[10px] text-[#A0A8B7] block max-w-[110px] leading-tight">
                       {alert.notice}
                     </span>
                   </div>
                 )}
               </div>
 
-              {/* Suggested Action Bar */}
-              <div className="mt-3 pt-3 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                <div className="flex items-center space-x-1.5 text-xs text-slate-400">
-                  <span className="font-semibold text-slate-300">Suggested Action:</span>
-                  <span className="text-slate-300 italic">{alert.suggestedAction}</span>
-                </div>
-
-                <div className="flex items-center space-x-2 shrink-0">
+              {/* Action buttons */}
+              <div className="mt-3 pt-2.5 border-t border-[#293142] flex items-center justify-end space-x-2">
+                <button
+                  onClick={() => onSelectObligation && onSelectObligation(alert.obligationId)}
+                  className="px-2.5 py-1 rounded-md text-xs font-medium text-[#A0A8B7] hover:text-[#F5F7FA] hover:bg-[#191F2B] transition-colors btn-press"
+                >
+                  Review Details
+                </button>
+                {onCompleteObligation && (
                   <button
                     onClick={() => onCompleteObligation(alert.obligationId)}
-                    className="px-2.5 py-1 text-xs font-semibold rounded bg-emerald-600/20 text-emerald-300 hover:bg-emerald-600/30 border border-emerald-500/30 transition-colors"
+                    className="px-3 py-1 rounded-md text-xs font-semibold bg-[#1D9BF0] hover:bg-[#1A8CD8] text-white shadow-xs transition-colors btn-press"
                   >
                     Mark Resolved
                   </button>
-                  {onSelectObligation && (
-                    <button
-                      onClick={() => onSelectObligation(alert.obligationId)}
-                      className="p-1 text-slate-400 hover:text-white transition-colors"
-                      title="Inspect Obligation"
-                    >
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
+                )}
               </div>
             </div>
           );

@@ -5,13 +5,9 @@ import { ObligationCard } from '../components/ObligationCard';
 import { ConfirmModal } from '../components/ConfirmModal';
 import {
   Search,
-  Filter,
   Plus,
   RotateCcw,
-  ListFilter,
   ArrowUpDown,
-  Calendar,
-  AlertCircle,
   Inbox
 } from 'lucide-react';
 
@@ -61,7 +57,6 @@ export const Obligations = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Modal confirmation state
   const [confirmAction, setConfirmAction] = useState(null);
 
   const fetchObligations = async () => {
@@ -88,7 +83,6 @@ export const Obligations = ({
   useEffect(() => {
     fetchObligations();
 
-    // Sync state with URL search params
     const newParams = {};
     if (search) newParams.search = search;
     if (category) newParams.category = category;
@@ -144,9 +138,9 @@ export const Obligations = ({
     setConfirmAction({
       type: 'delete',
       id,
-      title: 'Permanently Delete Obligation?',
-      message: 'This action cannot be undone. Are you sure you want to permanently delete this record?',
-      confirmText: 'Delete Obligation',
+      title: 'Delete Obligation?',
+      message: 'This action is irreversible and permanently removes the obligation and associated attachments.',
+      confirmText: 'Delete Permanently',
       variant: 'danger',
       action: async () => {
         try {
@@ -167,37 +161,37 @@ export const Obligations = ({
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-3 border-b border-[#293142]">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
+          <h1 className="text-2xl font-bold tracking-tight text-[#F5F7FA]">
             All Obligations
           </h1>
-          <p className="text-sm text-slate-400 mt-1">
-            Search, filter, and take action on your obligations.
+          <p className="text-xs text-[#A0A8B7] mt-0.5">
+            Search, filter, track recurring schedules, and manage attachments.
           </p>
         </div>
 
         <button
           onClick={onOpenNewModal}
-          className="flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold shadow-lg shadow-indigo-600/25 transition-all self-start sm:self-auto"
+          className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-lg bg-[#1D9BF0] hover:bg-[#1A8CD8] text-white text-xs font-semibold shadow-xs btn-press transition-colors self-start sm:self-auto"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-4 h-4 stroke-[2.5]" />
           <span>New Obligation</span>
         </button>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="glass-panel p-4 rounded-2xl border border-slate-800 space-y-3">
+      <div className="bg-[#121620] p-4 rounded-xl border border-[#293142] shadow-xs space-y-3">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
           {/* Search Input */}
           <div className="relative lg:col-span-2">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+            <Search className="w-4 h-4 text-[#6B7280] absolute left-3 top-2.5" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by title, description, notes..."
-              className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-[#191F2B] border border-[#293142] text-xs text-[#F5F7FA] placeholder-[#6B7280] focus:border-[#1D9BF0] focus:outline-none focus:ring-2 focus:ring-[#1D9BF0]/15"
             />
           </div>
 
@@ -206,7 +200,7 @@ export const Obligations = ({
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-1.5 rounded-lg bg-[#191F2B] border border-[#293142] text-xs text-[#F5F7FA] font-medium focus:border-[#1D9BF0] focus:outline-none"
             >
               {CATEGORIES.map((cat) => (
                 <option key={cat.value} value={cat.value}>
@@ -221,7 +215,7 @@ export const Obligations = ({
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-1.5 rounded-lg bg-[#191F2B] border border-[#293142] text-xs text-[#F5F7FA] font-medium focus:border-[#1D9BF0] focus:outline-none"
             >
               {STATUSES.map((st) => (
                 <option key={st.value} value={st.value}>
@@ -236,7 +230,7 @@ export const Obligations = ({
             <select
               value={urgency}
               onChange={(e) => setUrgency(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-1.5 rounded-lg bg-[#191F2B] border border-[#293142] text-xs text-[#F5F7FA] font-medium focus:border-[#1D9BF0] focus:outline-none"
             >
               {URGENCIES.map((ug) => (
                 <option key={ug.value} value={ug.value}>
@@ -248,27 +242,27 @@ export const Obligations = ({
         </div>
 
         {/* Sort & Reset Actions */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-800/80 text-xs">
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-[#293142] text-xs">
           <div className="flex items-center space-x-2">
-            <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
-            <span className="text-slate-400">Sort by:</span>
+            <ArrowUpDown className="w-3.5 h-3.5 text-[#A0A8B7]" />
+            <span className="text-[#A0A8B7] font-medium">Sort by:</span>
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value)}
-              className="bg-transparent border-0 text-indigo-400 font-semibold focus:outline-none cursor-pointer"
+              className="bg-transparent border-0 text-[#1D9BF0] font-semibold focus:outline-none cursor-pointer"
             >
-              <option value="dueDate" className="bg-slate-900 text-white">Due Date (Earliest First)</option>
-              <option value="-dueDate" className="bg-slate-900 text-white">Due Date (Latest First)</option>
-              <option value="-amount" className="bg-slate-900 text-white">Amount (Highest First)</option>
-              <option value="amount" className="bg-slate-900 text-white">Amount (Lowest First)</option>
-              <option value="createdAt" className="bg-slate-900 text-white">Recently Added</option>
+              <option value="dueDate">Due Date (Earliest First)</option>
+              <option value="-dueDate">Due Date (Latest First)</option>
+              <option value="-amount">Amount (Highest First)</option>
+              <option value="amount">Amount (Lowest First)</option>
+              <option value="createdAt">Recently Added</option>
             </select>
           </div>
 
           {hasActiveFilters && (
             <button
               onClick={handleClearFilters}
-              className="flex items-center space-x-1.5 text-slate-400 hover:text-white transition-colors"
+              className="flex items-center space-x-1.5 text-[#A0A8B7] hover:text-[#F5F7FA] font-medium transition-colors btn-press"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Reset Filters</span>
@@ -278,9 +272,9 @@ export const Obligations = ({
       </div>
 
       {/* Results Count */}
-      <div className="flex items-center justify-between text-xs text-slate-400 px-1">
+      <div className="flex items-center justify-between text-xs text-[#A0A8B7] px-1">
         <span>
-          Showing <span className="font-bold text-white">{obligations.length}</span> obligation
+          Showing <span className="font-semibold text-[#F5F7FA]">{obligations.length}</span> obligation
           {obligations.length === 1 ? '' : 's'}
         </span>
       </div>
@@ -289,32 +283,32 @@ export const Obligations = ({
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="h-44 bg-slate-900/60 rounded-2xl border border-slate-800 animate-pulse" />
+            <div key={i} className="h-44 rounded-xl bg-[#191F2B] animate-pulse border border-[#293142]" />
           ))}
         </div>
       ) : obligations.length === 0 ? (
-        <div className="glass-panel p-12 rounded-2xl border border-slate-800 text-center max-w-lg mx-auto">
-          <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center mx-auto mb-4 border border-indigo-500/20">
-            <Inbox className="w-7 h-7" />
+        <div className="bg-[#121620] p-12 rounded-xl border border-[#293142] shadow-xs text-center max-w-lg mx-auto">
+          <div className="w-12 h-12 rounded-xl bg-[#172435] text-[#1D9BF0] flex items-center justify-center mx-auto mb-3 border border-[#1D9BF0]/30">
+            <Inbox className="w-6 h-6 stroke-[2]" />
           </div>
-          <h3 className="text-lg font-bold text-white">No Obligations Found</h3>
-          <p className="text-sm text-slate-400 mt-2">
+          <h3 className="text-sm font-bold text-[#F5F7FA]">No Obligations Found</h3>
+          <p className="text-xs text-[#A0A8B7] mt-1.5 leading-relaxed">
             {hasActiveFilters
-              ? 'No records match your selected search query or filter criteria. Try clearing filters.'
+              ? 'No records match your selected search query or filter criteria. Try resetting filters.'
               : 'You do not have any obligations recorded yet. Start tracking subscriptions, warranties, and bills.'}
           </p>
-          <div className="mt-6 flex items-center justify-center space-x-3">
+          <div className="mt-5 flex items-center justify-center space-x-2.5">
             {hasActiveFilters ? (
               <button
                 onClick={handleClearFilters}
-                className="px-4 py-2 rounded-xl bg-slate-800 text-white text-xs font-semibold hover:bg-slate-700 transition-colors"
+                className="px-3.5 py-1.5 rounded-lg bg-[#191F2B] hover:bg-[#232B3C] text-[#F5F7FA] border border-[#293142] text-xs font-semibold transition-colors btn-press"
               >
                 Clear Filters
               </button>
             ) : (
               <button
                 onClick={onOpenNewModal}
-                className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-500 transition-colors shadow-lg shadow-indigo-600/30"
+                className="px-4 py-2 rounded-lg bg-[#1D9BF0] hover:bg-[#1A8CD8] text-white text-xs font-semibold shadow-xs transition-colors btn-press"
               >
                 + Create Obligation
               </button>

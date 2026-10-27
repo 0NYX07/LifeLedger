@@ -22,6 +22,8 @@ yarn-debug.log*
 yarn-error.log*
 logs/
 *.log
+.dev-mongodb-data/
+server/.dev-mongodb-data/
 
 # Editor directories and files
 .vscode/

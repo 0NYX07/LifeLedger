@@ -2,47 +2,137 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* LifeLedger Dark-Dominant Financial OS Design System */
+  --color-canvas: #0B0D12;
+  --color-surface: #121620;
+  --color-surface-subtle: #191F2B;
+  --color-surface-cool: #172435;
+  
+  --color-text-primary: #F5F7FA;
+  --color-text-secondary: #A0A8B7;
+  --color-text-tertiary: #6B7280;
+  --color-border: #293142;
+  --color-border-subtle: #1E2533;
+
+  /* Purposeful Accent Accents */
+  --color-primary: #1D9BF0;
+  --color-primary-hover: #1A8CD8;
+  --color-primary-light: #172435;
+  
+  --color-success: #25D366;
+  --color-success-bg: rgba(37, 211, 102, 0.12);
+  
+  --color-danger: #E53945;
+  --color-danger-bg: rgba(229, 57, 69, 0.12);
+  
+  --color-warning: #F59E0B;
+  --color-warning-bg: rgba(245, 158, 11, 0.12);
+
+  /* Motion Tokens */
+  --motion-fast: 150ms;
+  --motion-normal: 220ms;
+  --motion-slow: 360ms;
+
+  --ease-standard: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-emphasized: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --shadow-subtle: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px -1px rgba(0, 0, 0, 0.2);
+  --shadow-card: 0 2px 6px 0 rgba(0, 0, 0, 0.25), 0 1px 3px -1px rgba(0, 0, 0, 0.2);
+  --shadow-hover: 0 8px 20px -2px rgba(0, 0, 0, 0.4), 0 3px 8px -1px rgba(0, 0, 0, 0.3);
+  --shadow-modal: 0 25px 35px -5px rgba(0, 0, 0, 0.6), 0 10px 15px -6px rgba(0, 0, 0, 0.5);
+}
+
 @layer base {
   body {
-    @apply bg-slate-950 text-slate-100;
+    background-color: var(--color-canvas);
+    color: var(--color-text-primary);
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+  }
+
+  ::selection {
+    background-color: rgba(29, 155, 240, 0.3);
+    color: #F5F7FA;
   }
 }
 
-/* Glassmorphic card styling */
-.glass-panel {
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+/* Polished Dark Card & Panel Utility Classes */
+.app-card {
+  background-color: #121620;
+  border: 1px solid #293142;
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow-card);
+  transition: border-color var(--motion-fast) var(--ease-standard),
+              box-shadow var(--motion-fast) var(--ease-standard);
 }
 
-.glass-card {
-  background: rgba(30, 41, 59, 0.5);
+.app-card:hover {
+  border-color: #3B4559;
+  box-shadow: var(--shadow-hover);
+}
+
+.app-panel {
+  background-color: #191F2B;
+  border: 1px solid #293142;
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow-subtle);
+}
+
+.glass-nav {
+  background: rgba(18, 22, 32, 0.95);
+  border-bottom: 1px solid #293142;
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  -webkit-backdrop-filter: blur(12px);
 }
 
-.glass-card:hover {
-  border-color: rgba(99, 102, 241, 0.35);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+/* Subtle Interactive Press Feedback */
+.btn-press {
+  transition: transform 120ms cubic-bezier(0.2, 0.7, 0.2, 1),
+              background-color 150ms ease,
+              box-shadow 150ms ease;
 }
 
-/* Custom scrollbars */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+.btn-press:active {
+  transform: scale(0.98);
 }
 
-::-webkit-scrollbar-track {
-  background: #090d16;
+/* Form Controls */
+.form-input-clean {
+  background-color: #121620;
+  border: 1px solid #293142;
+  color: #F5F7FA;
+  border-radius: 0.5rem;
+  transition: border-color var(--motion-fast) var(--ease-standard),
+              box-shadow var(--motion-fast) var(--ease-standard);
 }
 
-::-webkit-scrollbar-thumb {
-  background: #1e293b;
-  border-radius: 4px;
+.form-input-clean:focus {
+  border-color: #1D9BF0;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(29, 155, 240, 0.25);
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+/* Badge Styles */
+.badge-clean {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1rem;
+}
+
+/* Accessibility: Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

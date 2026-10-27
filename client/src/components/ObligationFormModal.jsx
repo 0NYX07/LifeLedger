@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Calendar, DollarSign, Tag, AlertCircle, Loader2 } from 'lucide-react';
+import { X, AlertCircle, Loader2 } from 'lucide-react';
 
 const CATEGORIES = [
   { value: 'subscription', label: 'Subscription' },
@@ -48,7 +48,6 @@ export const ObligationFormModal = ({
         notes: initialData.notes || ''
       });
     } else {
-      // Defaults for new obligation
       const today = new Date().toISOString().split('T')[0];
       setFormData({
         title: '',
@@ -117,18 +116,21 @@ export const ObligationFormModal = ({
           onClose();
         }
       }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-150"
     >
-      <div className="relative w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="relative w-full max-w-lg bg-[#121620] border border-[#293142] rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-white tracking-tight">
-            {initialData ? 'Edit Obligation' : 'Create New Obligation'}
-          </h2>
+        <div className="px-6 py-4 border-b border-[#293142] bg-[#191F2B] flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <span className="w-2 h-2 rounded-full bg-[#1D9BF0]" />
+            <h2 className="text-sm font-bold text-[#F5F7FA] tracking-tight">
+              {initialData ? 'Edit Obligation' : 'Create New Obligation'}
+            </h2>
+          </div>
           <button
             onClick={onClose}
             disabled={isSubmitting}
-            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="p-1 rounded-lg text-[#A0A8B7] hover:text-[#F5F7FA] hover:bg-[#232B3C] transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -138,8 +140,8 @@ export const ObligationFormModal = ({
         <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-4">
           {/* Title */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-              Title <span className="text-rose-400">*</span>
+            <label className="block text-xs font-semibold text-[#F5F7FA] mb-1.5">
+              Title <span className="text-[#E53945]">*</span>
             </label>
             <input
               ref={titleInputRef}
@@ -148,12 +150,12 @@ export const ObligationFormModal = ({
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               placeholder="e.g. Netflix, Car Insurance, Laptop Return Window"
-              className={`w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                errors.title ? 'border-rose-500/80' : 'border-slate-800'
+              className={`w-full px-3.5 py-2 rounded-lg bg-[#191F2B] border text-xs text-[#F5F7FA] placeholder-[#6B7280] focus:border-[#1D9BF0] focus:outline-none focus:ring-2 focus:ring-[#1D9BF0]/20 ${
+                errors.title ? 'border-[#E53945]' : 'border-[#293142]'
               }`}
             />
             {errors.title && (
-              <p className="text-xs text-rose-400 mt-1 flex items-center gap-1">
+              <p className="text-xs text-[#E53945] mt-1 flex items-center gap-1">
                 <AlertCircle className="w-3.5 h-3.5" />
                 {errors.title}
               </p>
@@ -163,16 +165,16 @@ export const ObligationFormModal = ({
           {/* Category & Priority */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-[#F5F7FA] mb-1.5">
                 Category
               </label>
               <select
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3.5 py-2 rounded-lg bg-[#191F2B] border border-[#293142] text-xs text-[#F5F7FA] font-medium focus:border-[#1D9BF0] focus:outline-none"
               >
                 {CATEGORIES.map((cat) => (
-                  <option key={cat.value} value={cat.value}>
+                  <option key={cat.value} value={cat.value} className="bg-[#191F2B] text-[#F5F7FA]">
                     {cat.label}
                   </option>
                 ))}
@@ -180,17 +182,17 @@ export const ObligationFormModal = ({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-[#F5F7FA] mb-1.5">
                 Priority
               </label>
               <select
                 value={formData.priority}
                 onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3.5 py-2 rounded-lg bg-[#191F2B] border border-[#293142] text-xs text-[#F5F7FA] font-medium focus:border-[#1D9BF0] focus:outline-none"
               >
-                <option value="low">Low Priority</option>
-                <option value="medium">Medium Priority</option>
-                <option value="high">High Priority</option>
+                <option value="low" className="bg-[#191F2B] text-[#F5F7FA]">Low Priority</option>
+                <option value="medium" className="bg-[#191F2B] text-[#F5F7FA]">Medium Priority</option>
+                <option value="high" className="bg-[#191F2B] text-[#F5F7FA]">High Priority</option>
               </select>
             </div>
           </div>
@@ -198,20 +200,20 @@ export const ObligationFormModal = ({
           {/* Due Date & Recurrence */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                Due Date <span className="text-rose-400">*</span>
+              <label className="block text-xs font-semibold text-[#F5F7FA] mb-1.5">
+                Due Date <span className="text-[#E53945]">*</span>
               </label>
               <input
                 type="date"
                 required
                 value={formData.dueDate}
                 onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                className={`w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                  errors.dueDate ? 'border-rose-500/80' : 'border-slate-800'
+                className={`w-full px-3.5 py-2 rounded-lg bg-[#191F2B] border text-xs text-[#F5F7FA] focus:border-[#1D9BF0] focus:outline-none focus:ring-2 focus:ring-[#1D9BF0]/20 ${
+                  errors.dueDate ? 'border-[#E53945]' : 'border-[#293142]'
                 }`}
               />
               {errors.dueDate && (
-                <p className="text-xs text-rose-400 mt-1 flex items-center gap-1">
+                <p className="text-xs text-[#E53945] mt-1 flex items-center gap-1">
                   <AlertCircle className="w-3.5 h-3.5" />
                   {errors.dueDate}
                 </p>
@@ -219,17 +221,17 @@ export const ObligationFormModal = ({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-[#F5F7FA] mb-1.5">
                 Recurrence
               </label>
               <select
                 value={formData.recurrence}
                 onChange={(e) => setFormData({ ...formData, recurrence: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3.5 py-2 rounded-lg bg-[#191F2B] border border-[#293142] text-xs text-[#F5F7FA] font-medium focus:border-[#1D9BF0] focus:outline-none"
               >
-                <option value="none">One-time (No Recurrence)</option>
-                <option value="monthly">Monthly Recurring</option>
-                <option value="yearly">Yearly Recurring</option>
+                <option value="none" className="bg-[#191F2B] text-[#F5F7FA]">One-time (No Recurrence)</option>
+                <option value="monthly" className="bg-[#191F2B] text-[#F5F7FA]">Monthly Recurring</option>
+                <option value="yearly" className="bg-[#191F2B] text-[#F5F7FA]">Yearly Recurring</option>
               </select>
             </div>
           </div>
@@ -237,7 +239,7 @@ export const ObligationFormModal = ({
           {/* Amount & Currency */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-[#F5F7FA] mb-1.5">
                 Amount (Optional)
               </label>
               <input
@@ -247,12 +249,12 @@ export const ObligationFormModal = ({
                 value={formData.amount}
                 onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                 placeholder="e.g. 999"
-                className={`w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                  errors.amount ? 'border-rose-500/80' : 'border-slate-800'
+                className={`w-full px-3.5 py-2 rounded-lg bg-[#191F2B] border text-xs text-[#F5F7FA] placeholder-[#6B7280] focus:border-[#1D9BF0] focus:outline-none focus:ring-2 focus:ring-[#1D9BF0]/20 ${
+                  errors.amount ? 'border-[#E53945]' : 'border-[#293142]'
                 }`}
               />
               {errors.amount && (
-                <p className="text-xs text-rose-400 mt-1 flex items-center gap-1">
+                <p className="text-xs text-[#E53945] mt-1 flex items-center gap-1">
                   <AlertCircle className="w-3.5 h-3.5" />
                   {errors.amount}
                 </p>
@@ -260,7 +262,7 @@ export const ObligationFormModal = ({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-[#F5F7FA] mb-1.5">
                 Currency
               </label>
               <input
@@ -268,14 +270,14 @@ export const ObligationFormModal = ({
                 value={formData.currency}
                 onChange={(e) => setFormData({ ...formData, currency: e.target.value.toUpperCase() })}
                 placeholder="INR"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3.5 py-2 rounded-lg bg-[#191F2B] border border-[#293142] text-xs text-[#F5F7FA] font-medium focus:border-[#1D9BF0] focus:outline-none"
               />
             </div>
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-semibold text-[#F5F7FA] mb-1.5">
               Description (Optional)
             </label>
             <textarea
@@ -283,13 +285,13 @@ export const ObligationFormModal = ({
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="Context, account reference, or purpose"
-              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+              className="w-full px-3.5 py-2 rounded-lg bg-[#191F2B] border border-[#293142] text-xs text-[#F5F7FA] placeholder-[#6B7280] focus:border-[#1D9BF0] focus:outline-none focus:ring-2 focus:ring-[#1D9BF0]/20 resize-none"
             />
           </div>
 
           {/* Notes */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-semibold text-[#F5F7FA] mb-1.5">
               Personal Notes / Steps (Optional)
             </label>
             <textarea
@@ -297,26 +299,26 @@ export const ObligationFormModal = ({
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               placeholder="e.g. Keep box and original receipt; call support at 1800..."
-              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+              className="w-full px-3.5 py-2 rounded-lg bg-[#191F2B] border border-[#293142] text-xs text-[#F5F7FA] placeholder-[#6B7280] focus:border-[#1D9BF0] focus:outline-none focus:ring-2 focus:ring-[#1D9BF0]/20 resize-none"
             />
           </div>
 
           {/* Footer buttons */}
-          <div className="pt-4 border-t border-slate-800 flex items-center justify-end space-x-3">
+          <div className="pt-4 border-t border-[#293142] flex items-center justify-end space-x-2.5">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-4 py-2 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              className="px-4 py-2 rounded-lg text-xs font-medium text-[#A0A8B7] hover:text-[#F5F7FA] hover:bg-[#191F2B] transition-colors btn-press"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex items-center space-x-2 px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-sm font-semibold shadow-lg shadow-indigo-600/30 transition-all"
+              className="flex items-center space-x-1.5 px-4 py-2 rounded-lg bg-[#1D9BF0] hover:bg-[#1A8CD8] disabled:opacity-50 text-white text-xs font-semibold shadow-xs btn-press transition-colors"
             >
-              {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+              {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               <span>{initialData ? 'Save Changes' : 'Create Obligation'}</span>
             </button>
           </div>

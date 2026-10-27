@@ -16,12 +16,17 @@ export const AuthProvider = ({ children }) => {
           const res = await apiClient.auth.getMe();
           if (res.success && res.data) {
             setUser(res.data);
+            setToken(storedToken);
           } else {
-            handleLogout();
+            await handleLogout();
           }
         } catch (err) {
           console.warn('[Auth] Session validation failed:', err.message);
-          handleLogout();
+          // Only clear the token if the server explicitly rejected the authentication (401/403)
+          // Do not log the user out on transient network disconnects
+          if (err.status === 401 || err.status === 403) {
+            await handleLogout();
+          }
         }
       }
       setLoading(false);

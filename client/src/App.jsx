@@ -20,8 +20,8 @@ const ProtectedRoute = ({ children }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950">
-        <div className="w-10 h-10 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-[#0B0D12]">
+        <div className="w-9 h-9 border-3 border-[#293142] border-t-[#1D9BF0] rounded-full animate-spin" />
       </div>
     );
   }
@@ -39,8 +39,8 @@ const PublicRoute = ({ children }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950">
-        <div className="w-10 h-10 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-[#0B0D12]">
+        <div className="w-9 h-9 border-3 border-[#293142] border-t-[#1D9BF0] rounded-full animate-spin" />
       </div>
     );
   }
@@ -107,10 +107,10 @@ function MainLayout() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
+    <div className="min-h-screen flex flex-col bg-[#0B0D12] text-[#F5F7FA]">
       <Navbar onOpenNewModal={handleOpenNewModal} />
 
-      <main className="flex-1">
+      <main className="flex-1 pb-16">
         <Routes>
           <Route
             path="/"
@@ -176,16 +176,18 @@ function MainLayout() {
         </Routes>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-900 bg-slate-950 py-6 text-center text-xs text-slate-400">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+      {/* Dark Theme Elevated Footer */}
+      <footer className="border-t border-[#293142] bg-[#121620] py-6 text-xs text-[#A0A8B7]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center space-x-2">
-            <span className="font-bold text-slate-300">LifeLedger</span>
-            <span>—</span>
-            <span>Personal Life Administration MVP</span>
+            <span className="font-semibold text-[#F5F7FA]">LifeLedger</span>
+            <span className="text-[#293142]">•</span>
+            <span>Financial Intelligence & Life Administration OS</span>
           </div>
-          <div className="text-slate-400">
-            Obligation Intelligence • MERN Architecture
+          <div className="flex items-center space-x-3 text-[#A0A8B7]">
+            <span>Deterministic Financial Engine</span>
+            <span className="text-[#293142]">•</span>
+            <span>Protected & Private</span>
           </div>
         </div>
       </footer>

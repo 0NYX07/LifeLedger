@@ -32,8 +32,16 @@ const connectDB = async () => {
       return conn;
     }
 
-    // Development / Test environment: try MONGODB_URI if provided
+    // Development / Test environment: check for placeholder credentials
     if (uri) {
+      if (uri.includes('<db_username>') || uri.includes('<db_password>')) {
+        console.warn('================================================================================');
+        console.warn('[Database Config Warning] MONGODB_URI contains unreplaced template placeholders:');
+        console.warn('  "<db_username>" or "<db_password>" was detected.');
+        console.warn('  To persist data directly to MongoDB Atlas, update server/.env with your valid credentials.');
+        console.warn('================================================================================');
+      }
+
       try {
         const conn = await mongoose.connect(uri, {
           serverSelectionTimeoutMS: 5000
@@ -53,13 +61,47 @@ const connectDB = async () => {
       console.log(`[Database] Connected to local MongoDB: ${conn.connection.host}`);
       return conn;
     } catch (localErr) {
-      console.log('[Database] Local MongoDB not detected. Starting in-memory MongoDB instance for development...');
       const { MongoMemoryServer } = require('mongodb-memory-server');
-      memoryServer = await MongoMemoryServer.create();
-      const memUri = memoryServer.getUri();
-      const conn = await mongoose.connect(memUri);
-      console.log(`[Database] In-memory MongoDB Connected: ${memUri}`);
-      return conn;
+
+      // In development mode, use a persistent on-disk directory so data survives server reloads
+      if (process.env.NODE_ENV !== 'test') {
+        const path = require('path');
+        const fs = require('fs');
+        const devDbDir = path.resolve(__dirname, '../../.dev-mongodb-data');
+        if (!fs.existsSync(devDbDir)) {
+          fs.mkdirSync(devDbDir, { recursive: true });
+        }
+
+        // Clean up any orphan mongod process holding devDbDir from an unclean shutdown
+        try {
+          const { execSync } = require('child_process');
+          execSync(`pkill -f "${devDbDir}" || true`);
+          await new Promise(r => setTimeout(r, 400));
+          const lockFile = path.join(devDbDir, 'mongod.lock');
+          if (fs.existsSync(lockFile)) {
+            fs.unlinkSync(lockFile);
+          }
+        } catch (_) {}
+
+        console.log(`[Database] Local MongoDB not detected. Starting persistent development database at: ${devDbDir}...`);
+        memoryServer = await MongoMemoryServer.create({
+          instance: {
+            dbPath: devDbDir,
+            storageEngine: 'wiredTiger'
+          }
+        });
+        const memUri = memoryServer.getUri();
+        const conn = await mongoose.connect(memUri);
+        console.log(`[Database] Persistent Development MongoDB Connected: ${memUri}`);
+        return conn;
+      } else {
+        // Pure in-memory for unit/integration tests
+        memoryServer = await MongoMemoryServer.create();
+        const memUri = memoryServer.getUri();
+        const conn = await mongoose.connect(memUri);
+        console.log(`[Database] Test In-Memory MongoDB Connected: ${memUri}`);
+        return conn;
+      }
     }
   } catch (err) {
     console.error(`[Database Error] ${err.message}`);

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { apiClient } from '../api/apiClient';
 import { MoneyLeakBanner } from '../components/MoneyLeakBanner';
-import { ObligationCard } from '../components/ObligationCard';
 import { ConfirmModal } from '../components/ConfirmModal';
+import { FinancialCharts } from '../components/FinancialCharts';
+import { AnimatedCounter } from '../components/AnimatedCounter';
 import {
   AlertTriangle,
   Clock,
@@ -14,9 +16,23 @@ import {
   RefreshCw,
   ArrowRight,
   ShieldCheck,
-  Calendar
+  Calendar,
+  CreditCard,
+  History,
+  Repeat,
+  CheckCircle,
+  Edit2,
+  Trash2,
+  Paperclip,
+  ExternalLink
 } from 'lucide-react';
-import { formatCurrency } from '../utils/formatters';
+import {
+  formatCurrency,
+  formatDate,
+  formatRelativeDeadline,
+  CATEGORY_META,
+  URGENCY_META
+} from '../utils/formatters';
 
 export const Dashboard = ({
   onOpenNewModal,
@@ -25,8 +41,11 @@ export const Dashboard = ({
   onTriggerToast,
   refreshKey = 0
 }) => {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState(null);
+  const [allObligations, setAllObligations] = useState([]);
+  const [recentActivities, setRecentActivities] = useState([]);
   const [error, setError] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null);
 
@@ -34,9 +53,20 @@ export const Dashboard = ({
     try {
       setLoading(true);
       setError(null);
-      const res = await apiClient.dashboard.getSummary();
-      if (res.success) {
-        setSummary(res.data);
+      const [sumRes, obsRes, actRes] = await Promise.all([
+        apiClient.dashboard.getSummary(),
+        apiClient.obligations.list(),
+        apiClient.activity.list({ limit: 5 }).catch(() => ({ success: false, data: [] }))
+      ]);
+
+      if (sumRes.success) {
+        setSummary(sumRes.data);
+      }
+      if (obsRes.success) {
+        setAllObligations(obsRes.data || []);
+      }
+      if (actRes.success) {
+        setRecentActivities(actRes.data || []);
       }
     } catch (err) {
       setError(err.message || 'Failed to load dashboard data');
@@ -87,9 +117,9 @@ export const Dashboard = ({
     setConfirmAction({
       type: 'delete',
       id,
-      title: 'Permanently Delete Obligation?',
-      message: 'This action cannot be undone. Are you sure you want to permanently delete this record?',
-      confirmText: 'Delete Obligation',
+      title: 'Delete Obligation?',
+      message: 'This action is irreversible and permanently removes the obligation and associated attachments.',
+      confirmText: 'Delete Permanently',
       variant: 'danger',
       action: async () => {
         try {
@@ -105,31 +135,44 @@ export const Dashboard = ({
     });
   };
 
+  const todayFormatted = new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  }).format(new Date());
+
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
-        <div className="h-8 w-48 bg-slate-800/60 rounded-lg animate-pulse" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-28 bg-slate-900/60 rounded-2xl border border-slate-800 animate-pulse" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-pulse">
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <div className="h-6 w-48 bg-[#191F2B] rounded-md" />
+            <div className="h-4 w-72 bg-[#191F2B]/60 rounded-md" />
+          </div>
+          <div className="h-9 w-32 bg-[#191F2B] rounded-md" />
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="h-24 bg-[#121620] border border-[#293142] rounded-xl" />
           ))}
         </div>
-        <div className="h-44 bg-slate-900/60 rounded-2xl border border-slate-800 animate-pulse" />
+        <div className="h-72 bg-[#121620] border border-[#293142] rounded-xl" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
-        <div className="inline-flex p-4 rounded-2xl bg-rose-500/10 text-rose-400 mb-4 border border-rose-500/20">
-          <AlertTriangle className="w-8 h-8" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+        <div className="inline-flex p-3 rounded-xl bg-[#E53945]/15 text-[#E53945] mb-3 border border-[#E53945]/30">
+          <AlertTriangle className="w-6 h-6" />
         </div>
-        <h2 className="text-xl font-bold text-white">Unable to Load Dashboard</h2>
-        <p className="text-sm text-slate-400 mt-2 max-w-md mx-auto">{error}</p>
+        <h2 className="text-lg font-bold text-[#F5F7FA]">Unable to Load Financial Overview</h2>
+        <p className="text-xs text-[#A0A8B7] mt-1 max-w-md mx-auto">{error}</p>
         <button
           onClick={fetchDashboardData}
-          className="mt-6 inline-flex items-center space-x-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition-colors"
+          className="mt-4 inline-flex items-center space-x-1.5 px-4 py-2 rounded-lg bg-[#1D9BF0] hover:bg-[#1A8CD8] text-white text-xs font-semibold shadow-xs transition-colors btn-press"
         >
           <RefreshCw className="w-4 h-4" />
           <span>Retry</span>
@@ -144,252 +187,386 @@ export const Dashboard = ({
   const upcomingList = summary?.upcomingList || [];
   const moneyLeakAlerts = summary?.moneyLeakAlerts || [];
 
+  // Dedicated recurring commitments list (active records with recurrence)
+  const recurringObligations = allObligations.filter(
+    (o) => o.status === 'active' && o.recurrence && o.recurrence !== 'none'
+  );
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      {/* Page Title & Quick Action */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      {/* ========================================================
+          Section A: Page Heading
+          ======================================================== */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-[#293142]">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
-            Obligation Dashboard
+          <div className="flex items-center space-x-2 text-xs text-[#A0A8B7]">
+            <span>{todayFormatted}</span>
+            <span>•</span>
+            <span className="text-[#1D9BF0] font-medium">Verified Active Ledger</span>
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-[#F5F7FA] mt-1">
+            Financial Overview
           </h1>
-          <p className="text-sm text-slate-400 mt-1">
-            Real-time status of your subscriptions, bills, warranties, and deadlines.
+          <p className="text-xs text-[#A0A8B7] mt-0.5">
+            Clear tracking of your obligations, recurring commitments, and upcoming liabilities.
           </p>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2.5">
           <button
             onClick={fetchDashboardData}
             title="Refresh Data"
-            className="p-2.5 rounded-xl text-slate-400 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 transition-colors"
+            className="p-2 rounded-lg text-[#A0A8B7] hover:text-[#F5F7FA] bg-[#191F2B] hover:bg-[#232B3C] border border-[#293142] transition-colors shadow-xs btn-press"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
           <button
             onClick={onOpenNewModal}
-            className="flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold shadow-lg shadow-indigo-600/25 transition-all"
+            className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-lg bg-[#1D9BF0] hover:bg-[#1A8CD8] text-white text-xs font-semibold shadow-xs btn-press transition-colors"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-4 h-4 stroke-[2.5]" />
             <span>Add Obligation</span>
           </button>
         </div>
       </div>
 
-      {/* 4 Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Overdue */}
-        <div className="glass-panel p-5 rounded-2xl border border-rose-500/30 bg-rose-950/20 relative overflow-hidden">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-rose-400">Overdue</span>
-            <div className="p-2 rounded-xl bg-rose-500/20 text-rose-400">
-              <AlertTriangle className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-3 flex items-baseline space-x-2">
-            <span className="text-3xl font-extrabold text-white">{counts.overdue || 0}</span>
-            <span className="text-xs text-rose-300 font-medium">Require action</span>
-          </div>
-        </div>
-
-        {/* Due Today / Due Soon */}
-        <div className="glass-panel p-5 rounded-2xl border border-amber-500/30 bg-amber-950/20 relative overflow-hidden">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-amber-400">Due Soon (≤ 7 Days)</span>
-            <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400">
-              <Clock className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-3 flex items-baseline space-x-2">
-            <span className="text-3xl font-extrabold text-white">
-              {(counts.dueToday || 0) + (counts.dueSoon || 0)}
-            </span>
-            <span className="text-xs text-amber-300 font-medium">
-              {counts.dueToday || 0} due today
-            </span>
-          </div>
-        </div>
-
+      {/* ========================================================
+          Section B: Key Metrics Grid
+          ======================================================== */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {/* Active Obligations */}
-        <div className="glass-panel p-5 rounded-2xl border border-indigo-500/30 bg-indigo-950/20 relative overflow-hidden">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-indigo-400">Active Tracking</span>
-            <div className="p-2 rounded-xl bg-indigo-500/20 text-indigo-400">
-              <ListTodo className="w-4 h-4" />
-            </div>
+        <div className="bg-[#121620] border border-[#293142] p-4 rounded-xl shadow-xs">
+          <span className="text-[11px] font-medium uppercase tracking-wider text-[#A0A8B7] block">
+            Active
+          </span>
+          <div className="mt-1 text-2xl font-bold text-[#F5F7FA]">
+            <AnimatedCounter value={counts.active || 0} />
           </div>
-          <div className="mt-3 flex items-baseline space-x-2">
-            <span className="text-3xl font-extrabold text-white">{counts.active || 0}</span>
-            <span className="text-xs text-indigo-300 font-medium">of {counts.total || 0} total</span>
-          </div>
+          <span className="text-[10px] text-[#A0A8B7] block mt-0.5">
+            of {counts.total || 0} registered
+          </span>
         </div>
 
-        {/* Completed */}
-        <div className="glass-panel p-5 rounded-2xl border border-emerald-500/30 bg-emerald-950/20 relative overflow-hidden">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">Resolved / Closed</span>
-            <div className="p-2 rounded-xl bg-emerald-500/20 text-emerald-400">
-              <CheckCircle2 className="w-4 h-4" />
-            </div>
+        {/* Overdue Attention */}
+        <div
+          className={`p-4 rounded-xl border shadow-xs transition-colors ${
+            (counts.overdue || 0) > 0
+              ? 'bg-[#E53945]/15 border-[#E53945]/30'
+              : 'bg-[#121620] border-[#293142]'
+          }`}
+        >
+          <span
+            className={`text-[11px] font-medium uppercase tracking-wider block ${
+              (counts.overdue || 0) > 0 ? 'text-[#FCA5A5]' : 'text-[#A0A8B7]'
+            }`}
+          >
+            Overdue
+          </span>
+          <div
+            className={`mt-1 text-2xl font-bold ${
+              (counts.overdue || 0) > 0 ? 'text-[#E53945]' : 'text-[#F5F7FA]'
+            }`}
+          >
+            <AnimatedCounter value={counts.overdue || 0} />
           </div>
-          <div className="mt-3 flex items-baseline space-x-2">
-            <span className="text-3xl font-extrabold text-white">{counts.completed || 0}</span>
-            <span className="text-xs text-emerald-300 font-medium">
-              {counts.cancelled ? `+${counts.cancelled} cancelled` : 'completed'}
-            </span>
+          <span className={`text-[10px] block mt-0.5 ${
+            (counts.overdue || 0) > 0 ? 'text-[#FCA5A5]/80' : 'text-[#A0A8B7]'
+          }`}>
+            Requires resolution
+          </span>
+        </div>
+
+        {/* Due Soon */}
+        <div
+          className={`p-4 rounded-xl border shadow-xs transition-colors ${
+            (counts.dueSoon || 0) + (counts.dueToday || 0) > 0
+              ? 'bg-[#F59E0B]/15 border-[#F59E0B]/30'
+              : 'bg-[#121620] border-[#293142]'
+          }`}
+        >
+          <span
+            className={`text-[11px] font-medium uppercase tracking-wider block ${
+              (counts.dueSoon || 0) + (counts.dueToday || 0) > 0 ? 'text-[#FCD34D]' : 'text-[#A0A8B7]'
+            }`}
+          >
+            Due Soon
+          </span>
+          <div className="mt-1 text-2xl font-bold text-[#F5F7FA]">
+            <AnimatedCounter value={(counts.dueToday || 0) + (counts.dueSoon || 0)} />
           </div>
+          <span className={`text-[10px] block mt-0.5 ${
+            (counts.dueSoon || 0) + (counts.dueToday || 0) > 0 ? 'text-[#FCD34D]/80' : 'text-[#A0A8B7]'
+          }`}>
+            Next 7-day horizon
+          </span>
+        </div>
+
+        {/* Monthly Recurring */}
+        <div className="bg-[#121620] border border-[#293142] p-4 rounded-xl shadow-xs">
+          <span className="text-[11px] font-medium uppercase tracking-wider text-[#25D366] block">
+            Monthly Recurring
+          </span>
+          <div className="mt-1 text-xl sm:text-2xl font-bold text-[#F5F7FA] truncate">
+            <AnimatedCounter value={financial.monthlyRecurring || 0} prefix="₹" />
+          </div>
+          <span className="text-[10px] text-[#A0A8B7] block mt-0.5">
+            Active subscriptions
+          </span>
+        </div>
+
+        {/* Estimated Annual Commitments */}
+        <div className="bg-[#121620] border border-[#293142] p-4 rounded-xl shadow-xs">
+          <span className="text-[11px] font-medium uppercase tracking-wider text-[#A0A8B7] block">
+            Annual Commitment
+          </span>
+          <div className="mt-1 text-xl sm:text-2xl font-bold text-[#F5F7FA] truncate">
+            <AnimatedCounter value={financial.annualEstimate || 0} prefix="₹" />
+          </div>
+          <span className="text-[10px] text-[#A0A8B7] block mt-0.5">
+            12-month projection
+          </span>
+        </div>
+
+        {/* Upcoming 30 Days Outflow */}
+        <div className="bg-[#121620] border border-[#293142] p-4 rounded-xl shadow-xs">
+          <span className="text-[11px] font-medium uppercase tracking-wider text-[#1D9BF0] block">
+            30-Day Outflow
+          </span>
+          <div className="mt-1 text-xl sm:text-2xl font-bold text-[#F5F7FA] truncate">
+            <AnimatedCounter value={financial.upcomingPayments30Days || 0} prefix="₹" />
+          </div>
+          <span className="text-[10px] text-[#A0A8B7] block mt-0.5">
+            Due in 30 days
+          </span>
         </div>
       </div>
 
-      {/* Money Leak Detector */}
+      {/* ========================================================
+          Section C: Spending Analytics Suite (Recharts)
+          ======================================================== */}
+      <FinancialCharts obligations={allObligations} financial={financial} />
+
+      {/* Money Leak Warnings Banner */}
       <MoneyLeakBanner
         alerts={moneyLeakAlerts}
         onCompleteObligation={handleComplete}
         onSelectObligation={(id) => {
-          const obs = [...overdueList, ...upcomingList].find((o) => o._id === id);
+          const obs = allObligations.find((o) => o._id === id);
           if (obs) onEditObligation(obs);
         }}
       />
 
-      {/* Financial Snapshot Card */}
-      <div className="glass-panel p-6 rounded-2xl border border-slate-800 bg-slate-900/50">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
-          <div className="flex items-center space-x-3">
-            <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-              <TrendingUp className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-base font-bold text-white tracking-tight">Financial Outlook Summary</h3>
-              <p className="text-xs text-slate-400 mt-0.5">{financial.label}</p>
-            </div>
+      {/* ========================================================
+          Section D: Upcoming Obligations (Clean Table / List)
+          ======================================================== */}
+      <div className="bg-[#121620] border border-[#293142] rounded-xl shadow-xs overflow-hidden">
+        <div className="px-5 py-4 border-b border-[#293142] flex items-center justify-between">
+          <div>
+            <h2 className="text-sm font-bold text-[#F5F7FA] tracking-tight">
+              Upcoming Obligations
+            </h2>
+            <p className="text-xs text-[#A0A8B7] mt-0.5">
+              Scheduled payment dates, urgency status, and quick execution actions.
+            </p>
           </div>
           <Link
-            to="/money-outlook"
-            className="inline-flex items-center space-x-1.5 text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition-colors"
+            to="/obligations"
+            className="text-xs text-[#1D9BF0] hover:text-[#1A8CD8] font-semibold flex items-center space-x-1"
           >
-            <span>Detailed Outlook</span>
+            <span>View All</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-5">
-          <div>
-            <span className="text-xs text-slate-400 block font-medium">Monthly Recurring Costs</span>
-            <span className="text-2xl font-extrabold text-white mt-1 block">
-              {formatCurrency(financial.monthlyRecurring)}
-            </span>
-            <span className="text-[11px] text-slate-500 mt-0.5 block">
-              From active recurring records only
-            </span>
+        {upcomingList.length === 0 ? (
+          <div className="p-8 text-center">
+            <Calendar className="w-8 h-8 text-[#6B7280] mx-auto mb-2" />
+            <p className="text-xs font-semibold text-[#F5F7FA]">No Upcoming Obligations</p>
+            <p className="text-[11px] text-[#A0A8B7] mt-0.5">You are completely up to date!</p>
           </div>
+        ) : (
+          <div className="divide-y divide-[#293142]">
+            {upcomingList.slice(0, 5).map((obs) => {
+              const catMeta = CATEGORY_META[obs.category] || CATEGORY_META.custom;
+              const urgMeta = URGENCY_META[obs.urgency] || URGENCY_META.upcoming;
 
-          <div>
-            <span className="text-xs text-slate-400 block font-medium">Estimated Annual Commitment</span>
-            <span className="text-2xl font-extrabold text-white mt-1 block">
-              {formatCurrency(financial.annualEstimate)}
-            </span>
-            <span className="text-[11px] text-slate-500 mt-0.5 block">
-              (Monthly × 12) + yearly commitments
-            </span>
-          </div>
+              return (
+                <div
+                  key={obs._id}
+                  className="px-5 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-[#191F2B] transition-colors"
+                >
+                  <div className="flex items-start sm:items-center space-x-3">
+                    <div className="flex flex-col">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xs font-bold text-[#F5F7FA]">{obs.title}</span>
+                        <span className={`text-[10px] font-medium px-2 py-0.2 rounded-full ${catMeta.bg}`}>
+                          {catMeta.label}
+                        </span>
+                        {obs.recurrence && obs.recurrence !== 'none' && (
+                          <span className="flex items-center gap-0.5 text-[10px] font-medium px-1.5 py-0.2 rounded bg-[#172435] text-[#1D9BF0] border border-[#1D9BF0]/30">
+                            <Repeat className="w-2.5 h-2.5" />
+                            <span className="capitalize">{obs.recurrence}</span>
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center space-x-2 text-[11px] text-[#A0A8B7] mt-0.5">
+                        <span>Due {formatDate(obs.dueDate)}</span>
+                        <span>•</span>
+                        <span>{formatRelativeDeadline(obs.dueDate)}</span>
+                      </div>
+                    </div>
+                  </div>
 
-          <div>
-            <span className="text-xs text-slate-400 block font-medium">Upcoming Payments (30 Days)</span>
-            <span className="text-2xl font-extrabold text-white mt-1 block">
-              {formatCurrency(financial.upcomingPayments30Days)}
-            </span>
-            <span className="text-[11px] text-slate-500 mt-0.5 block">
-              Active obligations due within 30 days
-            </span>
+                  <div className="flex items-center justify-between sm:justify-end space-x-4">
+                    <div className="text-right">
+                      <span className="text-sm font-bold text-[#F5F7FA]">
+                        {formatCurrency(obs.amount, obs.currency)}
+                      </span>
+                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full block mt-0.5 ${urgMeta.bg}`}>
+                        {urgMeta.label}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center space-x-1">
+                      <button
+                        onClick={() => handleComplete(obs._id)}
+                        title="Mark as Completed"
+                        className="p-1.5 rounded-md text-[#A0A8B7] hover:text-[#25D366] hover:bg-[#25D366]/15 transition-colors btn-press"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                      </button>
+                      {onManageAttachments && (
+                        <button
+                          onClick={() => onManageAttachments(obs)}
+                          title="Manage Attachments"
+                          className="relative p-1.5 rounded-md text-[#A0A8B7] hover:text-[#1D9BF0] hover:bg-[#172435] transition-colors btn-press"
+                        >
+                          <Paperclip className="w-4 h-4" />
+                          {obs.attachments && obs.attachments.length > 0 && (
+                            <span className="absolute -top-1 -right-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-[#1D9BF0] px-0.5 text-[9px] font-bold text-white">
+                              {obs.attachments.length}
+                            </span>
+                          )}
+                        </button>
+                      )}
+                      <button
+                        onClick={() => onEditObligation(obs)}
+                        title="Edit Obligation"
+                        className="p-1.5 rounded-md text-[#A0A8B7] hover:text-[#1D9BF0] hover:bg-[#172435] transition-colors btn-press"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Two Column Layout: Overdue & Upcoming */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Overdue Section */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
-              Overdue Attention List
-            </h3>
-            <Link
-              to="/obligations?urgency=overdue"
-              className="text-xs text-indigo-400 hover:text-indigo-300 font-medium"
-            >
-              View all
-            </Link>
+      {/* ========================================================
+          Section E: Recurring Commitments Summary
+          ======================================================== */}
+      <div className="bg-[#121620] border border-[#293142] rounded-xl shadow-xs p-5 space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-[#293142]">
+          <div className="flex items-center space-x-2">
+            <Repeat className="w-4 h-4 text-[#25D366]" />
+            <h2 className="text-sm font-bold text-[#F5F7FA] tracking-tight">
+              Recurring Commitments & Subscriptions
+            </h2>
           </div>
-
-          {overdueList.length === 0 ? (
-            <div className="glass-panel p-6 rounded-2xl border border-slate-800 text-center">
-              <ShieldCheck className="w-8 h-8 text-emerald-400 mx-auto mb-2 opacity-80" />
-              <p className="text-sm font-semibold text-slate-200">No Overdue Obligations</p>
-              <p className="text-xs text-slate-400 mt-1">You are all caught up on your deadlines!</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {overdueList.map((obs) => (
-                <ObligationCard
-                  key={obs._id}
-                  obligation={obs}
-                  onEdit={onEditObligation}
-                  onComplete={handleComplete}
-                  onCancel={handleCancel}
-                  onDelete={handleDelete}
-                  onManageAttachments={onManageAttachments}
-                />
-              ))}
-            </div>
-          )}
+          <span className="text-xs font-semibold text-[#A0A8B7]">
+            {recurringObligations.length} Active Plan{recurringObligations.length === 1 ? '' : 's'}
+          </span>
         </div>
 
-        {/* Upcoming Section */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
-              Upcoming Deadlines
-            </h3>
+        {recurringObligations.length === 0 ? (
+          <p className="text-xs text-[#A0A8B7] py-4 text-center">
+            No active recurring obligations recorded. Mark recurring frequency when adding an obligation.
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {recurringObligations.map((obs) => {
+              const monthlyEquivalent =
+                obs.recurrence === 'yearly'
+                  ? Math.round((Number(obs.amount) || 0) / 12)
+                  : Number(obs.amount) || 0;
+
+              return (
+                <div
+                  key={obs._id}
+                  className="p-3.5 rounded-lg border border-[#293142] bg-[#191F2B] flex flex-col justify-between space-y-2"
+                >
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h4 className="text-xs font-bold text-[#F5F7FA] truncate">{obs.title}</h4>
+                      <span className="text-[10px] text-[#A0A8B7] capitalize">
+                        {obs.recurrence} billing cycle
+                      </span>
+                    </div>
+                    <span className="text-xs font-bold text-[#F5F7FA]">
+                      {formatCurrency(obs.amount, obs.currency)}
+                    </span>
+                  </div>
+
+                  <div className="pt-2 border-t border-[#293142] flex items-center justify-between text-[11px] text-[#A0A8B7]">
+                    <span>Monthly impact:</span>
+                    <span className="font-semibold text-[#F5F7FA]">
+                      {formatCurrency(monthlyEquivalent, obs.currency)}/mo
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* ========================================================
+          Section F: Recent Activity Audit Trail
+          ======================================================== */}
+      {recentActivities.length > 0 && (
+        <div className="bg-[#121620] border border-[#293142] rounded-xl p-5 shadow-xs space-y-3">
+          <div className="flex items-center justify-between pb-3 border-b border-[#293142]">
+            <div className="flex items-center space-x-2">
+              <History className="w-4 h-4 text-[#1D9BF0]" />
+              <h2 className="text-xs font-bold text-[#F5F7FA] uppercase tracking-wider">
+                Recent Ledger Activity
+              </h2>
+            </div>
             <Link
-              to="/obligations"
-              className="text-xs text-indigo-400 hover:text-indigo-300 font-medium"
+              to="/activity"
+              className="text-xs text-[#1D9BF0] hover:text-[#1A8CD8] font-semibold flex items-center space-x-1"
             >
-              View all ({counts.active || 0})
+              <span>View Audit Trail</span>
+              <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
-          {upcomingList.length === 0 ? (
-            <div className="glass-panel p-6 rounded-2xl border border-slate-800 text-center">
-              <Calendar className="w-8 h-8 text-slate-500 mx-auto mb-2" />
-              <p className="text-sm font-semibold text-slate-200">No Upcoming Deadlines</p>
-              <p className="text-xs text-slate-400 mt-1">Add obligations to track your future schedule.</p>
-              <button
-                onClick={onOpenNewModal}
-                className="mt-4 px-3.5 py-1.5 rounded-lg bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 text-xs font-semibold hover:bg-indigo-600/30 transition-colors"
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {recentActivities.map((act) => (
+              <div
+                key={act._id}
+                className="p-3 rounded-lg bg-[#191F2B] border border-[#293142] space-y-1"
               >
-                + Add First Obligation
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {upcomingList.map((obs) => (
-                <ObligationCard
-                  key={obs._id}
-                  obligation={obs}
-                  onEdit={onEditObligation}
-                  onComplete={handleComplete}
-                  onCancel={handleCancel}
-                  onDelete={handleDelete}
-                  onManageAttachments={onManageAttachments}
-                />
-              ))}
-            </div>
-          )}
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="font-semibold text-[#F5F7FA] truncate">{act.title}</span>
+                  <span className="text-[10px] text-[#1D9BF0] font-medium capitalize px-1.5 py-0.2 rounded bg-[#172435] border border-[#1D9BF0]/30">
+                    {act.action?.replace('_', ' ')}
+                  </span>
+                </div>
+                <p className="text-[11px] text-[#A0A8B7] truncate">{act.description}</p>
+                <span className="text-[10px] text-[#6B7280] block pt-1">
+                  {formatDate(act.createdAt)}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Confirmation Modal for Destructive Actions */}
+      {/* Global Confirmation Modal */}
       {confirmAction && (
         <ConfirmModal
           isOpen={true}

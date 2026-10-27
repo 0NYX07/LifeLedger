@@ -45,6 +45,7 @@ const register = async (req, res, next) => {
       data: {
         user: {
           id: user._id.toString(),
+          _id: user._id.toString(),
           name: user.name,
           email: user.email,
           createdAt: user.createdAt
@@ -93,6 +94,7 @@ const login = async (req, res, next) => {
       data: {
         user: {
           id: user._id.toString(),
+          _id: user._id.toString(),
           name: user.name,
           email: user.email,
           createdAt: user.createdAt
@@ -140,6 +142,7 @@ const getMe = async (req, res, next) => {
       success: true,
       data: {
         id: user._id.toString(),
+        _id: user._id.toString(),
         name: user.name,
         email: user.email,
         createdAt: user.createdAt

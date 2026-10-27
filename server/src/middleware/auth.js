@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'lifeledger_default_jwt_secret_key_2026';
+const getJwtSecret = () => process.env.JWT_SECRET || 'lifeledger_default_jwt_secret_key_2026';
 
 const authenticate = async (req, res, next) => {
   try {
@@ -21,7 +21,8 @@ const authenticate = async (req, res, next) => {
       });
     }
 
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const secret = getJwtSecret();
+    const decoded = jwt.verify(token, secret);
 
     // Fetch user without passwordHash
     const user = await User.findById(decoded.id).select('-passwordHash');
@@ -53,9 +54,15 @@ const authenticate = async (req, res, next) => {
 };
 
 const generateToken = (userId) => {
-  return jwt.sign({ id: userId }, JWT_SECRET, {
+  return jwt.sign({ id: userId }, getJwtSecret(), {
     expiresIn: '7d'
   });
 };
 
-module.exports = { authenticate, generateToken, JWT_SECRET };
+module.exports = {
+  authenticate,
+  generateToken,
+  get JWT_SECRET() {
+    return getJwtSecret();
+  }
+};

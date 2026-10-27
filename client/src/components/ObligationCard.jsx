@@ -6,7 +6,6 @@ import {
   Edit2,
   Trash2,
   Repeat,
-  AlertCircle,
   FileText,
   Paperclip
 } from 'lucide-react';
@@ -37,56 +36,56 @@ export const ObligationCard = ({
 
   return (
     <div
-      className={`glass-card rounded-2xl p-5 border flex flex-col justify-between relative overflow-hidden transition-all ${
+      className={`rounded-xl p-4 sm:p-5 border flex flex-col justify-between relative bg-[#121620] transition-all shadow-xs hover:shadow-md ${
         isCompleted
-          ? 'opacity-70 bg-slate-900/40 border-slate-800'
+          ? 'opacity-70 bg-[#121620]/60 border-[#293142]'
           : isCancelled
-          ? 'opacity-60 bg-zinc-950/40 border-zinc-800/80'
+          ? 'opacity-60 bg-[#121620]/50 border-[#293142]'
           : obligation.urgency === 'overdue'
-          ? 'border-red-500/30 bg-slate-900/60 shadow-lg shadow-red-950/20'
-          : 'border-slate-800 bg-slate-900/50 hover:border-slate-700'
+          ? 'border-l-4 border-l-[#E53945] border-t-[#293142] border-r-[#293142] border-b-[#293142]'
+          : 'border-[#293142] hover:border-[#3B4559]'
       }`}
     >
       {/* Top badges */}
       <div>
-        <div className="flex items-center justify-between gap-2 mb-3">
+        <div className="flex items-center justify-between gap-2 mb-2.5">
           <div className="flex items-center gap-1.5 flex-wrap">
             <span
-              className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border ${categoryMeta.bg}`}
+              className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${categoryMeta.bg}`}
             >
               {categoryMeta.label}
             </span>
             <span
-              className={`text-[11px] font-medium px-2 py-0.5 rounded-full border ${priorityMeta.color}`}
+              className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${priorityMeta.color}`}
             >
               {priorityMeta.label}
             </span>
             {obligation.recurrence && obligation.recurrence !== 'none' && (
-              <span className="flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-indigo-950/60 text-indigo-300 border border-indigo-500/30">
-                <Repeat className="w-3 h-3" />
+              <span className="flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-[#172435] text-[#1D9BF0] border border-[#1D9BF0]/30">
+                <Repeat className="w-3 h-3 text-[#1D9BF0]" />
                 <span className="capitalize">{obligation.recurrence}</span>
               </span>
             )}
           </div>
 
           <span
-            className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${urgencyMeta.bg}`}
+            className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${urgencyMeta.bg}`}
           >
             {urgencyMeta.label}
           </span>
         </div>
 
         {/* Title and Amount */}
-        <div className="flex items-start justify-between gap-3 mb-2">
+        <div className="flex items-start justify-between gap-3 mb-1.5">
           <h3
-            className={`text-base font-bold tracking-tight text-white ${
-              isCompleted || isCancelled ? 'line-through text-slate-400' : ''
+            className={`text-sm sm:text-base font-bold tracking-tight text-[#F5F7FA] ${
+              isCompleted || isCancelled ? 'line-through text-[#A0A8B7]' : ''
             }`}
           >
             {obligation.title}
           </h3>
           <div className="text-right shrink-0">
-            <span className="text-lg font-extrabold text-white">
+            <span className="text-base sm:text-lg font-bold text-[#F5F7FA]">
               {formatCurrency(obligation.amount, obligation.currency)}
             </span>
           </div>
@@ -94,27 +93,27 @@ export const ObligationCard = ({
 
         {/* Description */}
         {obligation.description && (
-          <p className="text-xs text-slate-400 mb-3 line-clamp-2">
+          <p className="text-xs text-[#A0A8B7] mb-2.5 line-clamp-2 leading-relaxed">
             {obligation.description}
           </p>
         )}
 
         {/* Notes preview */}
         {obligation.notes && (
-          <div className="flex items-start gap-1.5 text-xs text-slate-400 mb-3 bg-slate-950/40 p-2 rounded-lg border border-slate-800/50">
-            <FileText className="w-3.5 h-3.5 shrink-0 mt-0.5 text-slate-500" />
-            <span className="italic line-clamp-2">{obligation.notes}</span>
+          <div className="flex items-start gap-1.5 text-xs text-[#A0A8B7] mb-2.5 bg-[#191F2B] p-2 rounded-lg border border-[#293142]">
+            <FileText className="w-3.5 h-3.5 shrink-0 mt-0.5 text-[#6B7280]" />
+            <span className="italic line-clamp-2 text-[11px]">{obligation.notes}</span>
           </div>
         )}
       </div>
 
       {/* Due date & Action buttons footer */}
-      <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2 mt-2">
-        <div className="flex items-center space-x-1.5 text-xs text-slate-400">
-          <Calendar className="w-3.5 h-3.5 text-indigo-400" />
-          <span>{formatDate(obligation.dueDate)}</span>
+      <div className="pt-3 border-t border-[#293142] flex items-center justify-between gap-2 mt-2">
+        <div className="flex items-center space-x-1.5 text-xs text-[#A0A8B7]">
+          <Calendar className="w-3.5 h-3.5 text-[#1D9BF0]" />
+          <span className="font-semibold text-[#F5F7FA]">{formatDate(obligation.dueDate)}</span>
           {isActive && (
-            <span className="text-slate-400 font-medium">
+            <span className="text-[#A0A8B7] text-[11px]">
               ({formatRelativeDeadline(obligation.dueDate)})
             </span>
           )}
@@ -126,14 +125,14 @@ export const ObligationCard = ({
               <button
                 onClick={() => onComplete(obligation._id)}
                 title="Mark as Completed"
-                className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors"
+                className="p-1.5 rounded-md text-[#A0A8B7] hover:text-[#25D366] hover:bg-[#25D366]/15 transition-colors btn-press"
               >
                 <CheckCircle className="w-4 h-4" />
               </button>
               <button
                 onClick={() => onCancel(obligation._id)}
                 title="Mark as Cancelled"
-                className="p-1.5 rounded-lg text-slate-400 hover:text-amber-400 hover:bg-amber-500/10 transition-colors"
+                className="p-1.5 rounded-md text-[#A0A8B7] hover:text-[#F59E0B] hover:bg-[#F59E0B]/15 transition-colors btn-press"
               >
                 <XCircle className="w-4 h-4" />
               </button>
@@ -144,11 +143,11 @@ export const ObligationCard = ({
             <button
               onClick={() => onManageAttachments(obligation)}
               title="Manage Attachments"
-              className="relative p-1.5 rounded-lg text-slate-400 hover:text-purple-400 hover:bg-purple-500/10 transition-colors"
+              className="relative p-1.5 rounded-md text-[#A0A8B7] hover:text-[#1D9BF0] hover:bg-[#172435] transition-colors btn-press"
             >
               <Paperclip className="w-4 h-4" />
               {obligation.attachments && obligation.attachments.length > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-purple-500 px-0.5 text-[9px] font-bold text-white">
+                <span className="absolute -top-1 -right-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-[#1D9BF0] px-0.5 text-[9px] font-bold text-white">
                   {obligation.attachments.length}
                 </span>
               )}
@@ -158,7 +157,7 @@ export const ObligationCard = ({
           <button
             onClick={() => onEdit(obligation)}
             title="Edit Obligation"
-            className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 transition-colors"
+            className="p-1.5 rounded-md text-[#A0A8B7] hover:text-[#1D9BF0] hover:bg-[#172435] transition-colors btn-press"
           >
             <Edit2 className="w-4 h-4" />
           </button>
@@ -166,7 +165,7 @@ export const ObligationCard = ({
           <button
             onClick={() => onDelete(obligation._id)}
             title="Delete Obligation"
-            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+            className="p-1.5 rounded-md text-[#A0A8B7] hover:text-[#E53945] hover:bg-[#E53945]/15 transition-colors btn-press"
           >
             <Trash2 className="w-4 h-4" />
           </button>

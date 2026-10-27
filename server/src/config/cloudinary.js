@@ -1,12 +1,19 @@
+const path = require('path');
+const dotenv = require('dotenv');
+
+// Ensure environment variables are loaded regardless of execution CWD
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+dotenv.config();
+
 const cloudinary = require('cloudinary').v2;
 
 /**
  * Configure Cloudinary with environment variables
  */
 const configureCloudinary = () => {
-  const cloud_name = process.env.CLOUDINARY_CLOUD_NAME;
-  const api_key = process.env.CLOUDINARY_API_KEY;
-  const api_secret = process.env.CLOUDINARY_API_SECRET;
+  const cloud_name = (process.env.CLOUDINARY_CLOUD_NAME || '').trim();
+  const api_key = (process.env.CLOUDINARY_API_KEY || '').trim();
+  const api_secret = (process.env.CLOUDINARY_API_SECRET || '').trim();
 
   if (cloud_name && api_key && api_secret) {
     cloudinary.config({
@@ -17,6 +24,12 @@ const configureCloudinary = () => {
     });
     return true;
   }
+
+  cloudinary.config({
+    cloud_name: '',
+    api_key: '',
+    api_secret: ''
+  });
   return false;
 };
 
@@ -26,6 +39,45 @@ configureCloudinary();
 const isCloudinaryConfigured = () => {
   const { cloud_name, api_key, api_secret } = cloudinary.config();
   return Boolean(cloud_name && api_key && api_secret);
+};
+
+/**
+ * Safely verify Cloudinary SDK configuration and credentials without exposing secrets
+ * @returns {Promise<Object>} Diagnostic result
+ */
+const verifyCloudinaryConfig = async () => {
+  // Re-attempt configuration in case environment variables were set dynamically
+  configureCloudinary();
+
+  if (!isCloudinaryConfigured()) {
+    return {
+      configured: false,
+      valid: false,
+      message: 'Cloudinary credentials missing in environment (CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, or CLOUDINARY_API_SECRET).'
+    };
+  }
+
+  try {
+    const res = await cloudinary.api.ping();
+    return {
+      configured: true,
+      valid: true,
+      status: res.status || 'ok'
+    };
+  } catch (err) {
+    const errorDetails = err && err.error ? err.error : err;
+    const msg = (errorDetails && errorDetails.message) || (err && err.message) || '';
+    const httpCode = (errorDetails && errorDetails.http_code) || (err && err.http_code);
+    const isSecretMismatch = msg.includes('api_secret mismatch') || msg.includes('Invalid Signature') || httpCode === 401;
+
+    return {
+      configured: true,
+      valid: false,
+      error: isSecretMismatch
+        ? 'Invalid Signature / API Secret mismatch: The configured CLOUDINARY_API_SECRET does not match the CLOUDINARY_API_KEY account. Please update CLOUDINARY_API_SECRET in server/.env with the exact secret from your Cloudinary console.'
+        : (msg || 'Cloudinary verification failed')
+    };
+  }
 };
 
 /**
@@ -42,6 +94,8 @@ const isCloudinaryConfigured = () => {
  */
 const uploadBuffer = (buffer, options = {}) => {
   return new Promise((resolve, reject) => {
+    configureCloudinary();
+
     if (!isCloudinaryConfigured()) {
       return reject(new Error('Cloudinary is not configured. Please verify CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET.'));
     }
@@ -68,7 +122,11 @@ const uploadBuffer = (buffer, options = {}) => {
 
     const stream = cloudinary.uploader.upload_stream(uploadOptions, (error, result) => {
       if (error) {
-        return reject(new Error(`Cloudinary upload failed: ${error.message}`));
+        const errorMsg = error.message || '';
+        if (errorMsg.includes('Invalid Signature') || errorMsg.includes('api_secret mismatch')) {
+          return reject(new Error('Cloudinary upload failed: Invalid Signature. The configured CLOUDINARY_API_SECRET does not match the CLOUDINARY_API_KEY account. Please check your Cloudinary dashboard and update CLOUDINARY_API_SECRET in server/.env.'));
+        }
+        return reject(new Error(`Cloudinary upload failed: ${errorMsg}`));
       }
       resolve({
         publicId: result.public_id,
@@ -159,6 +217,7 @@ module.exports = {
   cloudinary,
   configureCloudinary,
   isCloudinaryConfigured,
+  verifyCloudinaryConfig,
   uploadBuffer,
   generateSignedUrl,
   destroyAsset
