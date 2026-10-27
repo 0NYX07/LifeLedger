@@ -2,74 +2,61 @@
 
 **Take control of your commitments. Stay ahead of deadlines. Protect your money.**
 
-LifeLedger is a personal life administration and financial awareness application designed to help you organize important responsibilities, track deadlines, manage recurring commitments, and identify potential financial losses before they happen.
+LifeLedger is a personal obligation management and financial awareness application that helps users organize important responsibilities, track deadlines, manage recurring commitments, and identify potential financial losses before they happen.
 
-Instead of keeping subscriptions, bills, warranties, returns, insurance policies, and renewal dates scattered across different apps, LifeLedger brings them together in one centralized dashboard.
+Instead of keeping subscriptions, bills, warranties, return deadlines, and renewals scattered across different places, LifeLedger brings them together in one centralized dashboard.
 
 ## 🚀 Live Demo
-
-**[Explore LifeLedger](https://life-ledger-gold.vercel.app/login)**
-
-Create an account to access your personal dashboard and manage your obligations.
 
 ## ✨ Features
 
 ### 📊 Intelligent Dashboard
-- Get an overview of active, overdue, upcoming, and completed obligations.
-- Monitor important deadlines and financial commitments.
-- View key statistics and financial insights in one place.
-- Identify responsibilities that need immediate attention.
+- Overview of active, overdue, upcoming, and completed obligations.
+- Key financial statistics and insights.
+- Quick visibility into responsibilities requiring attention.
 
-### 💸 Money Leak Detector
-- Highlights overdue obligations and deadlines approaching soon.
-- Uses transparent, rule-based urgency detection.
-- Provides suggested actions to help reduce avoidable financial losses.
-- Helps you stay aware of expiring return windows, unpaid bills, and other time-sensitive commitments.
+### 💸 Money Leak Detection
+- Identify overdue obligations and approaching deadlines.
+- Highlight potential avoidable financial losses.
+- Prioritize important actions before deadlines are missed.
 
 ### 📅 Obligation Management
-Create, view, update, complete, cancel, and delete personal obligations across multiple categories:
-
-- Subscriptions
-- Bills and utilities
-- Purchases and return windows
-- Warranties
-- Insurance
+Manage different types of personal obligations, including:
+- Subscriptions and recurring bills
+- Product return windows
+- Warranties and insurance
 - Document renewals
-- Custom obligations
+- Custom commitments
 
-Each record can include relevant dates, financial details, descriptions, notes, and supporting attachments.
+Record relevant dates, amounts, descriptions, notes, and supporting attachments.
 
 ### 🔁 Recurring Commitments
 - Track recurring expenses and financial obligations.
-- Calculate estimated monthly recurring expenses.
-- View projected annual commitments based on active recurring records.
-- Understand upcoming financial responsibilities before they become urgent.
-
-*Financial projections are estimates derived from the information recorded in the application.*
+- Estimate monthly recurring expenses.
+- View projected annual commitments based on recorded data.
 
 ### 📈 Money Outlook
-Explore financial summaries and visualizations that help you understand recurring commitments, upcoming expenses, and potential money leaks.
+Explore financial summaries and visualizations to understand upcoming expenses, recurring commitments, and potential money leaks.
 
 ### 🔔 Notifications and Activity History
-- Keep track of important updates and obligation-related events.
-- Review activity history to understand changes made to your records.
-- Stay informed about responsibilities that require attention.
+- Keep track of important updates.
+- Review activity associated with your obligations.
+- Stay informed about responsibilities that need attention.
 
 ### 📎 Attachment Support
-Attach supporting documents to relevant obligations, such as receipts, warranty documents, or other records.
+Attach relevant documents, such as receipts and warranty information, to your obligations.
 
-### 🔐 Authentication and Data Isolation
+### 🔐 Authentication and Data Security
 - User registration and login.
-- Password hashing using bcrypt.
+- Password hashing.
 - JWT-based authentication.
-- Server-side authorization and user-specific data access.
-- Request validation and centralized error handling.
+- User-specific data access and protected routes.
 
 ## 🛠️ Tech Stack
 
 | Layer | Technologies |
 |---|---|
-| Frontend | React 19, Vite |
+| Frontend | React, Vite |
 | Styling | Tailwind CSS |
 | Routing | React Router |
 | Charts | Recharts |
@@ -78,7 +65,6 @@ Attach supporting documents to relevant obligations, such as receipts, warranty 
 | Backend | Node.js, Express.js |
 | Database | MongoDB, Mongoose |
 | Authentication | JWT, bcryptjs |
-| Validation | Express Validator |
 | File Storage | Cloudinary |
 
 ## 🏗️ Project Structure
@@ -87,45 +73,37 @@ Attach supporting documents to relevant obligations, such as receipts, warranty 
 LifeLedger/
 ├── client/
 │   ├── src/
-│   │   ├── api/             # API client
-│   │   ├── components/      # Reusable UI components
-│   │   ├── context/         # Authentication context
-│   │   ├── pages/           # Application pages
-│   │   ├── utils/           # Formatting and utilities
+│   │   ├── api/
+│   │   ├── components/
+│   │   ├── context/
+│   │   ├── pages/
+│   │   ├── utils/
 │   │   ├── App.jsx
 │   │   └── main.jsx
-│   ├── index.html
 │   ├── package.json
 │   └── vite.config.js
 │
 ├── server/
 │   ├── src/
-│   │   ├── config/          # Database and storage configuration
-│   │   ├── controllers/     # Request handlers
-│   │   ├── middleware/      # Authentication and validation
-│   │   ├── models/          # Mongoose models
-│   │   ├── routes/          # API routes
-│   │   ├── services/        # Business logic
+│   │   ├── config/
+│   │   ├── controllers/
+│   │   ├── middleware/
+│   │   ├── models/
+│   │   ├── routes/
+│   │   ├── services/
 │   │   ├── app.js
 │   │   └── server.js
-│   ├── tests/
-│   ├── package.json
-│   └── example.env
+│   └── package.json
 │
-├── package.json
 └── README.md
 ```
 
 ## ⚙️ Getting Started
 
 ### Prerequisites
-
-Install the following:
-
-- Node.js 18 or later
-- npm
-- A MongoDB instance or MongoDB Atlas account
-- A Cloudinary account for attachment storage
+- Node.js and npm
+- MongoDB or MongoDB Atlas
+- Cloudinary account for attachment storage
 
 ### 1. Clone the Repository
 
@@ -136,99 +114,66 @@ cd LifeLedger
 
 ### 2. Install Dependencies
 
-Install the backend dependencies:
-
 ```bash
-cd server
-npm install
-cd ..
-```
-
-Install the frontend dependencies:
-
-```bash
-cd client
-npm install
-cd ..
+cd server && npm install
+cd ../client && npm install
 ```
 
 ### 3. Configure Environment Variables
 
-Create `server/.env` using `server/example.env` as a reference.
+Create the backend environment file at `server/.env` and configure the variables required by the application:
 
-Configure the following variables with your own values:
+```dotenv
+PORT=5000
+NODE_ENV=development
+MONGODB_URI=your_mongodb_connection_string
+JWT_SECRET=your_generated_random_secret
+CLIENT_ORIGIN=http://localhost:5173
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+MAX_FILE_SIZE_BYTES=5242880
+```
 
-| Variable | Purpose |
-|---|---|
-| `PORT` | Local backend port |
-| `NODE_ENV` | Runtime environment |
-| `MONGODB_URI` | MongoDB connection string |
-| `JWT_SECRET` | Secret used for signing JWTs |
-| `CLIENT_ORIGIN` | Allowed frontend origin for CORS |
-| `CLOUDINARY_CLOUD_NAME` | Cloudinary account cloud name |
-| `CLOUDINARY_API_KEY` | Cloudinary API key |
-| `CLOUDINARY_API_SECRET` | Cloudinary API secret |
-| `MAX_FILE_SIZE_BYTES` | Maximum attachment size in bytes |
+Configure the frontend API base URL using the environment variable expected by the existing client code.
 
-For the frontend, configure `client/.env` with the API base URL variable used by the application. In production, it should point to the deployed backend API.
+Never commit real credentials or secrets to version control.
 
-**Security:** Never commit `.env` files, database credentials, JWT secrets, or Cloudinary API secrets to version control.
-
-### 4. Start the Backend
-
-Open a terminal:
+### 4. Run the Backend
 
 ```bash
 cd server
 npm run dev
 ```
 
-### 5. Start the Frontend
+### 5. Run the Frontend
 
-Open another terminal:
+In a separate terminal:
 
 ```bash
 cd client
 npm run dev
 ```
 
-Open the local URL printed by Vite in your terminal.
-
-## 🧪 Testing
-
-Run the backend test suite:
-
-```bash
-cd server
-npm test
-```
-
-Verify the configured Cloudinary credentials:
-
-```bash
-npm run verify-cloudinary
-```
-
-Build the frontend for production:
-
-```bash
-cd client
-npm run build
-```
+Open the local URL provided by Vite.
 
 ## 🌐 Deployment
+ 
+LifeLedger's frontend is deployed on Vercel.
+ 
+The application requires its backend, database, and file-storage services to be configured correctly for all features to function.
+ 
+### Vercel Project Configuration:
+- **Framework Preset**: `Vite`
+- **Root Directory**: `client`
+- **Build Command**: `npm run build`
+- **Output Directory**: `dist`
+- **Install Command**: `npm install`
+- **Environment Variables**:
 
-The frontend is deployed on Vercel.
+## 🎯 Project Objective
 
-**[Open the Live Application](https://life-ledger-gold.vercel.app/login)**
-
-The application requires the backend, database, and attachment storage to be configured correctly for all features to work in production. Configure secrets through the deployment platform's environment-variable settings rather than committing them to the repository.
-
-## 🎯 Project Goal
-
-LifeLedger aims to make personal administration more organized, proactive, and financially aware.
-
-By combining obligation tracking, deadline intelligence, recurring expense projections, activity history, and supporting documents in one application, it helps users move from remembering responsibilities manually to managing them systematically.
+LifeLedger aims to make personal administration more organized, proactive, and financially aware. By combining obligation tracking, deadline management, recurring expense projections, and supporting documents in one place, it helps users manage their responsibilities systematically.
 
 ---
 
