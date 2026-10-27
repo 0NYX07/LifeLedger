@@ -55,6 +55,7 @@ function MainLayout() {
   const [editingObligation, setEditingObligation] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const triggerToast = ({ type, message }) => {
     setToast({ type, message });
@@ -81,15 +82,14 @@ function MainLayout() {
         if (res.success) {
           triggerToast({ type: 'success', message: 'Obligation updated successfully!' });
           setModalOpen(false);
-          // Reload page or let component refresh
-          window.location.reload();
+          setRefreshKey((k) => k + 1);
         }
       } else {
         const res = await apiClient.obligations.create(formData);
         if (res.success) {
           triggerToast({ type: 'success', message: 'Obligation created successfully!' });
           setModalOpen(false);
-          window.location.reload();
+          setRefreshKey((k) => k + 1);
         }
       }
     } catch (err) {
@@ -113,6 +113,7 @@ function MainLayout() {
                   onOpenNewModal={handleOpenNewModal}
                   onEditObligation={handleOpenEditModal}
                   onTriggerToast={triggerToast}
+                  refreshKey={refreshKey}
                 />
               </ProtectedRoute>
             }
@@ -125,6 +126,7 @@ function MainLayout() {
                   onOpenNewModal={handleOpenNewModal}
                   onEditObligation={handleOpenEditModal}
                   onTriggerToast={triggerToast}
+                  refreshKey={refreshKey}
                 />
               </ProtectedRoute>
             }
@@ -133,7 +135,7 @@ function MainLayout() {
             path="/money-outlook"
             element={
               <ProtectedRoute>
-                <MoneyOutlook />
+                <MoneyOutlook refreshKey={refreshKey} />
               </ProtectedRoute>
             }
           />

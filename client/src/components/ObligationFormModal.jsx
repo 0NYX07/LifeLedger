@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, Calendar, DollarSign, Tag, AlertCircle, Loader2 } from 'lucide-react';
 
 const CATEGORIES = [
@@ -19,6 +19,7 @@ export const ObligationFormModal = ({
   initialData = null,
   isSubmitting = false
 }) => {
+  const titleInputRef = useRef(null);
   const [formData, setFormData] = useState({
     title: '',
     category: 'custom',
@@ -62,7 +63,23 @@ export const ObligationFormModal = ({
       });
     }
     setErrors({});
+
+    if (isOpen) {
+      setTimeout(() => {
+        titleInputRef.current?.focus();
+      }, 50);
+    }
   }, [initialData, isOpen]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isOpen && !isSubmitting) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, isSubmitting, onClose]);
 
   if (!isOpen) return null;
 
@@ -94,7 +111,14 @@ export const ObligationFormModal = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-150">
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !isSubmitting) {
+          onClose();
+        }
+      }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-150"
+    >
       <div className="relative w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
@@ -103,6 +127,7 @@ export const ObligationFormModal = ({
           </h2>
           <button
             onClick={onClose}
+            disabled={isSubmitting}
             className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
           >
             <X className="w-5 h-5" />
@@ -117,6 +142,7 @@ export const ObligationFormModal = ({
               Title <span className="text-rose-400">*</span>
             </label>
             <input
+              ref={titleInputRef}
               type="text"
               required
               value={formData.title}

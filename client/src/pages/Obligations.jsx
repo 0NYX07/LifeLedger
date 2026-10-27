@@ -42,7 +42,7 @@ const URGENCIES = [
   { value: 'upcoming', label: 'Upcoming' }
 ];
 
-export const Obligations = ({ onOpenNewModal, onEditObligation, onTriggerToast }) => {
+export const Obligations = ({ onOpenNewModal, onEditObligation, onTriggerToast, refreshKey = 0 }) => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [search, setSearch] = useState(searchParams.get('search') || '');
@@ -90,7 +90,7 @@ export const Obligations = ({ onOpenNewModal, onEditObligation, onTriggerToast }
     if (urgency) newParams.urgency = urgency;
     if (sort !== 'dueDate') newParams.sort = sort;
     setSearchParams(newParams, { replace: true });
-  }, [search, category, status, urgency, sort]);
+  }, [search, category, status, urgency, sort, refreshKey]);
 
   const handleClearFilters = () => {
     setSearch('');

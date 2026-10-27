@@ -39,7 +39,7 @@ export const ObligationCard = ({
         isCompleted
           ? 'opacity-70 bg-slate-900/40 border-slate-800'
           : isCancelled
-          ? 'opacity-60 bg-zinc-950/40 border-zinc-800/80 line-through'
+          ? 'opacity-60 bg-zinc-950/40 border-zinc-800/80'
           : obligation.urgency === 'overdue'
           ? 'border-red-500/30 bg-slate-900/60 shadow-lg shadow-red-950/20'
           : 'border-slate-800 bg-slate-900/50 hover:border-slate-700'

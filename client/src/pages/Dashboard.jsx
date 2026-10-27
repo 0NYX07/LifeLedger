@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { apiClient } from '../api/apiClient';
 import { MoneyLeakBanner } from '../components/MoneyLeakBanner';
 import { ObligationCard } from '../components/ObligationCard';
+import { ConfirmModal } from '../components/ConfirmModal';
 import {
   AlertTriangle,
   Clock,
@@ -17,10 +18,11 @@ import {
 } from 'lucide-react';
 import { formatCurrency } from '../utils/formatters';
 
-export const Dashboard = ({ onOpenNewModal, onEditObligation, onTriggerToast }) => {
+export const Dashboard = ({ onOpenNewModal, onEditObligation, onTriggerToast, refreshKey = 0 }) => {
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState(null);
   const [error, setError] = useState(null);
+  const [confirmAction, setConfirmAction] = useState(null);
 
   const fetchDashboardData = async () => {
     try {
@@ -39,7 +41,7 @@ export const Dashboard = ({ onOpenNewModal, onEditObligation, onTriggerToast }) 
 
   useEffect(() => {
     fetchDashboardData();
-  }, []);
+  }, [refreshKey]);
 
   const handleComplete = async (id) => {
     try {
@@ -53,28 +55,48 @@ export const Dashboard = ({ onOpenNewModal, onEditObligation, onTriggerToast }) 
     }
   };
 
-  const handleCancel = async (id) => {
-    try {
-      const res = await apiClient.obligations.cancel(id);
-      if (res.success) {
-        onTriggerToast({ type: 'success', message: 'Obligation cancelled' });
-        fetchDashboardData();
+  const handleCancel = (id) => {
+    setConfirmAction({
+      type: 'cancel',
+      id,
+      title: 'Cancel Obligation?',
+      message: 'This will move the obligation to cancelled status. It will no longer show up as active.',
+      confirmText: 'Yes, Cancel Obligation',
+      variant: 'warning',
+      action: async () => {
+        try {
+          const res = await apiClient.obligations.cancel(id);
+          if (res.success) {
+            onTriggerToast({ type: 'success', message: 'Obligation cancelled' });
+            fetchDashboardData();
+          }
+        } catch (err) {
+          onTriggerToast({ type: 'error', message: err.message || 'Failed to cancel obligation' });
+        }
       }
-    } catch (err) {
-      onTriggerToast({ type: 'error', message: err.message || 'Failed to cancel obligation' });
-    }
+    });
   };
 
-  const handleDelete = async (id) => {
-    try {
-      const res = await apiClient.obligations.delete(id);
-      if (res.success) {
-        onTriggerToast({ type: 'success', message: 'Obligation deleted' });
-        fetchDashboardData();
+  const handleDelete = (id) => {
+    setConfirmAction({
+      type: 'delete',
+      id,
+      title: 'Permanently Delete Obligation?',
+      message: 'This action cannot be undone. Are you sure you want to permanently delete this record?',
+      confirmText: 'Delete Obligation',
+      variant: 'danger',
+      action: async () => {
+        try {
+          const res = await apiClient.obligations.delete(id);
+          if (res.success) {
+            onTriggerToast({ type: 'success', message: 'Obligation deleted' });
+            fetchDashboardData();
+          }
+        } catch (err) {
+          onTriggerToast({ type: 'error', message: err.message || 'Failed to delete obligation' });
+        }
       }
-    } catch (err) {
-      onTriggerToast({ type: 'error', message: err.message || 'Failed to delete obligation' });
-    }
+    });
   };
 
   if (loading) {
@@ -358,6 +380,22 @@ export const Dashboard = ({ onOpenNewModal, onEditObligation, onTriggerToast }) 
           )}
         </div>
       </div>
+
+      {/* Confirmation Modal for Destructive Actions */}
+      {confirmAction && (
+        <ConfirmModal
+          isOpen={true}
+          title={confirmAction.title}
+          message={confirmAction.message}
+          confirmText={confirmAction.confirmText}
+          confirmVariant={confirmAction.variant}
+          onConfirm={() => {
+            confirmAction.action();
+            setConfirmAction(null);
+          }}
+          onClose={() => setConfirmAction(null)}
+        />
+      )}
     </div>
   );
 };

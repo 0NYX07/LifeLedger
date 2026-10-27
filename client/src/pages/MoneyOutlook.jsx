@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '../utils/formatters';
 
-export const MoneyOutlook = () => {
+export const MoneyOutlook = ({ refreshKey = 0 }) => {
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState(null);
   const [recurringList, setRecurringList] = useState([]);
@@ -48,7 +48,7 @@ export const MoneyOutlook = () => {
 
   useEffect(() => {
     fetchOutlookData();
-  }, []);
+  }, [refreshKey]);
 
   const financial = summary?.financialSummary || {};
 
