@@ -1,203 +1,235 @@
-# LifeLedger — Obligation Intelligence & Life Administration
+# LifeLedger — Personal Obligation Intelligence
 
-> **LifeLedger** is a personal life administration web application built to help users organize personal obligations, track critical deadlines, identify potential financial consequences before they occur, and manage responsibilities through completion.
+**Take control of your commitments. Stay ahead of deadlines. Protect your money.**
 
-Its core differentiator is **Obligation Intelligence**: connecting deadlines, financial commitments, supporting details, and suggested next actions in one centralized, secure ledger.
+LifeLedger is a personal life administration and financial awareness application designed to help you organize important responsibilities, track deadlines, manage recurring commitments, and identify potential financial losses before they happen.
 
----
+Instead of keeping subscriptions, bills, warranties, returns, insurance policies, and renewal dates scattered across different apps, LifeLedger brings them together in one centralized dashboard.
 
-## Key Features
+## 🚀 Live Demo
 
-- **Personal Obligation Lifecycle:** Full CRUD management for obligations across 8 life categories: *Subscription*, *Bill / Utility*, *Purchase*, *Return Window*, *Warranty*, *Insurance*, *Document Renewal*, and *Custom*.
-- **Deterministic Money Leak Detector:** Transparent, rule-based urgency evaluation that highlights imminent deadlines (overdue, due-today, due-soon within 7 days) and pairs each with a specific suggested action.
-- **Financial Outlook & Recurring Projection:** Calculates monthly recurring expenses and annual commitments derived strictly from active records marked with recurrence. Projections are clearly labeled as estimates.
-- **Multi-Tenant User Data Isolation:** Private records are strictly scoped to the authenticated user on the server. Unauthorized access attempts return 404 without disclosing resource existence.
-- **Search, Filters & Sorting:** Real-time search across titles, descriptions, and notes, combined with category, status, urgency, and sort filters.
-- **Secure Authentication:** JWT token authentication with bcrypt password hashing and email normalization.
+**[Explore LifeLedger](https://life-ledger-gold.vercel.app/login)**
 
----
+Create an account to access your personal dashboard and manage your obligations.
 
-## Technology Stack
+## ✨ Features
 
-- **Frontend:** React 19, Vite, Tailwind CSS, Lucide React, React Router
-- **Backend:** Node.js, Express.js
-- **Database:** MongoDB & Mongoose
-- **Authentication:** JSON Web Tokens (JWT), bcryptjs
-- **Validation:** Express Validator with strict request body allowlists
+### 📊 Intelligent Dashboard
+- Get an overview of active, overdue, upcoming, and completed obligations.
+- Monitor important deadlines and financial commitments.
+- View key statistics and financial insights in one place.
+- Identify responsibilities that need immediate attention.
 
----
+### 💸 Money Leak Detector
+- Highlights overdue obligations and deadlines approaching soon.
+- Uses transparent, rule-based urgency detection.
+- Provides suggested actions to help reduce avoidable financial losses.
+- Helps you stay aware of expiring return windows, unpaid bills, and other time-sensitive commitments.
 
-## Project Structure
+### 📅 Obligation Management
+Create, view, update, complete, cancel, and delete personal obligations across multiple categories:
+
+- Subscriptions
+- Bills and utilities
+- Purchases and return windows
+- Warranties
+- Insurance
+- Document renewals
+- Custom obligations
+
+Each record can include relevant dates, financial details, descriptions, notes, and supporting attachments.
+
+### 🔁 Recurring Commitments
+- Track recurring expenses and financial obligations.
+- Calculate estimated monthly recurring expenses.
+- View projected annual commitments based on active recurring records.
+- Understand upcoming financial responsibilities before they become urgent.
+
+*Financial projections are estimates derived from the information recorded in the application.*
+
+### 📈 Money Outlook
+Explore financial summaries and visualizations that help you understand recurring commitments, upcoming expenses, and potential money leaks.
+
+### 🔔 Notifications and Activity History
+- Keep track of important updates and obligation-related events.
+- Review activity history to understand changes made to your records.
+- Stay informed about responsibilities that require attention.
+
+### 📎 Attachment Support
+Attach supporting documents to relevant obligations, such as receipts, warranty documents, or other records.
+
+### 🔐 Authentication and Data Isolation
+- User registration and login.
+- Password hashing using bcrypt.
+- JWT-based authentication.
+- Server-side authorization and user-specific data access.
+- Request validation and centralized error handling.
+
+## 🛠️ Tech Stack
+
+| Layer | Technologies |
+|---|---|
+| Frontend | React 19, Vite |
+| Styling | Tailwind CSS |
+| Routing | React Router |
+| Charts | Recharts |
+| Animations | Framer Motion |
+| Icons | Lucide React |
+| Backend | Node.js, Express.js |
+| Database | MongoDB, Mongoose |
+| Authentication | JWT, bcryptjs |
+| Validation | Express Validator |
+| File Storage | Cloudinary |
+
+## 🏗️ Project Structure
 
 ```text
 LifeLedger/
-├── client/                     # Frontend React + Vite application
+├── client/
 │   ├── src/
-│   │   ├── api/
-│   │   │   └── apiClient.js    # Centralized HTTP client
-│   │   ├── components/
-│   │   │   ├── ConfirmModal.jsx
-│   │   │   ├── MoneyLeakBanner.jsx
-│   │   │   ├── Navbar.jsx
-│   │   │   ├── ObligationCard.jsx
-│   │   │   ├── ObligationFormModal.jsx
-│   │   │   └── Toast.jsx
-│   │   ├── context/
-│   │   │   └── AuthContext.jsx  # Authentication state & session
-│   │   ├── pages/
-│   │   │   ├── Dashboard.jsx   # Metrics, money leaks, queues
-│   │   │   ├── Login.jsx
-│   │   │   ├── MoneyOutlook.jsx# Financial commitments & recurring costs
-│   │   │   ├── Obligations.jsx # Search, filter, and CRUD
-│   │   │   └── Register.jsx
-│   │   ├── utils/
-│   │   │   └── formatters.js   # Date, currency, badge styling
+│   │   ├── api/             # API client
+│   │   ├── components/      # Reusable UI components
+│   │   ├── context/         # Authentication context
+│   │   ├── pages/           # Application pages
+│   │   ├── utils/           # Formatting and utilities
 │   │   ├── App.jsx
-│   │   ├── index.css
 │   │   └── main.jsx
 │   ├── index.html
 │   ├── package.json
-│   ├── tailwind.config.js
 │   └── vite.config.js
-├── server/                     # Backend Express API
+│
+├── server/
 │   ├── src/
-│   │   ├── config/
-│   │   │   └── db.js           # Database connection & fallback
-│   │   ├── controllers/
-│   │   │   ├── auth.controller.js
-│   │   │   ├── dashboard.controller.js
-│   │   │   └── obligation.controller.js
-│   │   ├── middleware/
-│   │   │   ├── auth.js         # JWT verification & req.user injection
-│   │   │   ├── errorHandler.js # Central error handler
-│   │   │   └── validate.js     # Express-validator schemas
-│   │   ├── models/
-│   │   │   ├── Obligation.js   # Obligation Mongoose schema & indexes
-│   │   │   └── User.js         # User model with password hashing
-│   │   ├── routes/
-│   │   │   ├── auth.routes.js
-│   │   │   ├── dashboard.routes.js
-│   │   │   └── obligation.routes.js
-│   │   ├── services/
-│   │   │   └── obligation.service.js # Urgency, money leaks, financials
+│   │   ├── config/          # Database and storage configuration
+│   │   ├── controllers/     # Request handlers
+│   │   ├── middleware/      # Authentication and validation
+│   │   ├── models/          # Mongoose models
+│   │   ├── routes/          # API routes
+│   │   ├── services/        # Business logic
 │   │   ├── app.js
 │   │   └── server.js
 │   ├── tests/
-│   │   ├── helpers/
-│   │   │   └── testDb.js
-│   │   └── api.test.js         # Integration test suite (21 tests)
-│   └── package.json
-├── .gitignore
-├── package.json                # Root package with workspace convenience scripts
+│   ├── package.json
+│   └── example.env
+│
+├── package.json
 └── README.md
 ```
 
----
+## ⚙️ Getting Started
 
-## Environment Configuration
+### Prerequisites
 
-Configure environment variables locally using `.env` files (excluded from Git).
+Install the following:
 
-### Backend Variables (`server/.env`)
+- Node.js 18 or later
+- npm
+- A MongoDB instance or MongoDB Atlas account
+- A Cloudinary account for attachment storage
 
-| Variable | Description | Default / Example |
-|---|---|---|
-| `PORT` | Port for Express server | `5000` |
-| `NODE_ENV` | Runtime environment | `development` |
-| `MONGODB_URI` | MongoDB connection string | `mongodb://localhost:27017/lifeledger` |
-| `JWT_SECRET` | Secret key for signing session tokens | `<secure-random-secret>` |
-| `CLIENT_ORIGIN` | Allowed CORS origin | `http://localhost:5173` |
+### 1. Clone the Repository
 
-*Note: In development, if `MONGODB_URI` is omitted or local MongoDB is not running, the server automatically starts an in-memory MongoDB instance for local testing.*
-
-### Frontend Variables (`client/.env`)
-
-| Variable | Description | Default / Example |
-|---|---|---|
-| `VITE_API_BASE_URL` | Base URL of backend API (empty in dev when using Vite proxy) | `http://localhost:5000` |
-
----
-
-## Installation & Running Locally
-
-### 1. Prerequisites
-- Node.js (v18+)
-- npm (v9+)
-- MongoDB (optional for local development, as memory fallback is provided)
+```bash
+git clone https://github.com/0NYX07/LifeLedger.git
+cd LifeLedger
+```
 
 ### 2. Install Dependencies
 
-From root:
-```bash
-# Install backend dependencies
-cd server && npm install && cd ..
+Install the backend dependencies:
 
-# Install frontend dependencies
-cd client && npm install && cd ..
+```bash
+cd server
+npm install
+cd ..
 ```
 
-### 3. Start Development Servers
+Install the frontend dependencies:
 
-Run the backend and frontend simultaneously:
-
-**Terminal 1 (Backend API):**
 ```bash
-npm run server
-# Server will run on http://localhost:5000
-# Health endpoint: http://localhost:5000/api/health
+cd client
+npm install
+cd ..
 ```
 
-**Terminal 2 (Frontend Client):**
+### 3. Configure Environment Variables
+
+Create `server/.env` using `server/example.env` as a reference.
+
+Configure the following variables with your own values:
+
+| Variable | Purpose |
+|---|---|
+| `PORT` | Local backend port |
+| `NODE_ENV` | Runtime environment |
+| `MONGODB_URI` | MongoDB connection string |
+| `JWT_SECRET` | Secret used for signing JWTs |
+| `CLIENT_ORIGIN` | Allowed frontend origin for CORS |
+| `CLOUDINARY_CLOUD_NAME` | Cloudinary account cloud name |
+| `CLOUDINARY_API_KEY` | Cloudinary API key |
+| `CLOUDINARY_API_SECRET` | Cloudinary API secret |
+| `MAX_FILE_SIZE_BYTES` | Maximum attachment size in bytes |
+
+For the frontend, configure `client/.env` with the API base URL variable used by the application. In production, it should point to the deployed backend API.
+
+**Security:** Never commit `.env` files, database credentials, JWT secrets, or Cloudinary API secrets to version control.
+
+### 4. Start the Backend
+
+Open a terminal:
+
 ```bash
-npm run client
-# Client will run on http://localhost:5173
+cd server
+npm run dev
 ```
 
----
+### 5. Start the Frontend
 
-## Running Automated Tests
-
-LifeLedger includes automated integration tests covering health checks, authentication, authorization, CRUD lifecycle, multi-tenant isolation, money leak detection, and filtering:
+Open another terminal:
 
 ```bash
+cd client
+npm run dev
+```
+
+Open the local URL printed by Vite in your terminal.
+
+## 🧪 Testing
+
+Run the backend test suite:
+
+```bash
+cd server
 npm test
 ```
 
-Or from the server directory:
+Verify the configured Cloudinary credentials:
+
 ```bash
-cd server && npm test
+npm run verify-cloudinary
 ```
 
----
-
-## Production Build
-
-To build the client bundle for production:
+Build the frontend for production:
 
 ```bash
+cd client
 npm run build
 ```
 
-The compiled assets will be placed in `client/dist/`.
+## 🌐 Deployment
+
+The frontend is deployed on Vercel.
+
+**[Open the Live Application](https://life-ledger-gold.vercel.app/login)**
+
+The application requires the backend, database, and attachment storage to be configured correctly for all features to work in production. Configure secrets through the deployment platform's environment-variable settings rather than committing them to the repository.
+
+## 🎯 Project Goal
+
+LifeLedger aims to make personal administration more organized, proactive, and financially aware.
+
+By combining obligation tracking, deadline intelligence, recurring expense projections, activity history, and supporting documents in one application, it helps users move from remembering responsibilities manually to managing them systematically.
 
 ---
 
-## API Endpoints
-
-### Authentication
-- `POST /api/auth/register` — Register a new account
-- `POST /api/auth/login` — Sign in and obtain JWT
-- `POST /api/auth/logout` — Invalidate session cookie
-- `GET /api/auth/me` — Retrieve current user profile
-
-### Obligations (Protected)
-- `GET /api/obligations` — List obligations (supports `search`, `category`, `status`, `urgency`, `sort`)
-- `POST /api/obligations` — Create new obligation
-- `GET /api/obligations/:id` — Retrieve single obligation with urgency calculation
-- `PATCH /api/obligations/:id` — Update allowlisted fields
-- `PATCH /api/obligations/:id/complete` — Mark obligation completed
-- `PATCH /api/obligations/:id/cancel` — Mark obligation cancelled
-- `DELETE /api/obligations/:id` — Delete obligation
-
-### Dashboard & Analytics (Protected)
-- `GET /api/dashboard/summary` — Retrieve dashboard metrics, Money Leak Detector alerts, and financial estimates
+**LifeLedger — Remember what matters. Act before it costs you.**
