@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { NotificationBell } from './NotificationBell';
 import {
   LayoutDashboard,
   ListTodo,
   TrendingUp,
+  History,
   Plus,
   LogOut,
   Menu,
@@ -21,7 +23,8 @@ export const Navbar = ({ onOpenNewModal }) => {
   const navLinks = [
     { to: '/', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/obligations', label: 'Obligations', icon: ListTodo },
-    { to: '/money-outlook', label: 'Money Outlook', icon: TrendingUp }
+    { to: '/money-outlook', label: 'Money Outlook', icon: TrendingUp },
+    { to: '/activity', label: 'Activity', icon: History }
   ];
 
   const isActive = (path) => {
@@ -77,6 +80,8 @@ export const Navbar = ({ onOpenNewModal }) => {
           <div className="flex items-center space-x-3">
             {user ? (
               <>
+                <NotificationBell />
+
                 <button
                   onClick={onOpenNewModal}
                   className="hidden sm:flex items-center space-x-2 px-3.5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold shadow-md shadow-indigo-600/25 hover:shadow-indigo-500/35 active:scale-95 transition-all"

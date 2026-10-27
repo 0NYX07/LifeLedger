@@ -1,5 +1,11 @@
+const fs = require('fs');
+const path = require('path');
 const { Obligation } = require('../models/Obligation');
 const { calculateUrgency, evaluateMoneyLeak } = require('../services/obligation.service');
+const { logActivity } = require('../services/activity.service');
+const { createLifecycleNotification } = require('../services/notification.service');
+const { computeNextDueDate } = require('../utils/recurrence');
+const { deleteFile } = require('../config/storage');
 
 // Allowlists for creating and updating obligations
 const ALLOWED_FIELDS = [
@@ -101,6 +107,20 @@ const createObligation = async (req, res, next) => {
     const result = obligation.toJSON();
     result.urgency = calculateUrgency(obligation.dueDate, obligation.status);
 
+    // Record activity
+    await logActivity(userId, {
+      action: 'created',
+      resourceType: 'obligation',
+      resourceId: obligation._id,
+      title: obligation.title,
+      description: `Created obligation "${obligation.title}"`,
+      details: {
+        category: obligation.category,
+        amount: obligation.amount,
+        recurrence: obligation.recurrence
+      }
+    });
+
     res.status(201).json({
       success: true,
       data: result,
@@ -148,9 +168,10 @@ const getObligation = async (req, res, next) => {
  */
 const updateObligation = async (req, res, next) => {
   try {
+    const userId = req.user.id;
     const obligation = await Obligation.findOne({
       _id: req.params.id,
-      userId: req.user.id
+      userId
     });
 
     if (!obligation) {
@@ -160,8 +181,14 @@ const updateObligation = async (req, res, next) => {
       });
     }
 
+    const originalRecurrence = obligation.recurrence;
+    let recurrenceChanged = false;
+
     ALLOWED_FIELDS.forEach((field) => {
       if (req.body[field] !== undefined) {
+        if (field === 'recurrence' && req.body[field] !== originalRecurrence) {
+          recurrenceChanged = true;
+        }
         if (field === 'amount' && (req.body[field] === '' || req.body[field] === null)) {
           obligation[field] = null;
         } else {
@@ -182,6 +209,21 @@ const updateObligation = async (req, res, next) => {
     const result = obligation.toJSON();
     result.urgency = calculateUrgency(obligation.dueDate, obligation.status);
 
+    // Record activity
+    await logActivity(userId, {
+      action: recurrenceChanged ? 'recurrence_changed' : 'updated',
+      resourceType: 'obligation',
+      resourceId: obligation._id,
+      title: obligation.title,
+      description: recurrenceChanged
+        ? `Changed recurrence of "${obligation.title}" from ${originalRecurrence} to ${obligation.recurrence}`
+        : `Updated details for "${obligation.title}"`,
+      details: {
+        recurrence: obligation.recurrence,
+        amount: obligation.amount
+      }
+    });
+
     res.status(200).json({
       success: true,
       data: result,
@@ -193,14 +235,15 @@ const updateObligation = async (req, res, next) => {
 };
 
 /**
- * Mark obligation as completed
+ * Mark obligation as completed and schedule next recurrence if applicable
  * PATCH /api/obligations/:id/complete
  */
 const completeObligation = async (req, res, next) => {
   try {
+    const userId = req.user.id;
     const obligation = await Obligation.findOne({
       _id: req.params.id,
-      userId: req.user.id
+      userId
     });
 
     if (!obligation) {
@@ -217,10 +260,74 @@ const completeObligation = async (req, res, next) => {
     const result = obligation.toJSON();
     result.urgency = calculateUrgency(obligation.dueDate, obligation.status);
 
+    // Record completion activity
+    await logActivity(userId, {
+      action: 'completed',
+      resourceType: 'obligation',
+      resourceId: obligation._id,
+      title: obligation.title,
+      description: `Marked "${obligation.title}" as completed`,
+      details: { completedAt: obligation.completedAt }
+    });
+
+    // Feature B: Check if obligation has recurring schedule (monthly or yearly)
+    let nextOccurrence = null;
+    if (obligation.recurrence && obligation.recurrence !== 'none') {
+      const nextDueDate = computeNextDueDate(obligation.dueDate, obligation.recurrence);
+      if (nextDueDate) {
+        // Idempotency: avoid duplicate next occurrences
+        const existingNext = await Obligation.findOne({
+          userId,
+          title: obligation.title,
+          status: 'active',
+          recurrence: obligation.recurrence,
+          dueDate: nextDueDate
+        });
+
+        if (!existingNext) {
+          nextOccurrence = await Obligation.create({
+            userId,
+            title: obligation.title,
+            description: obligation.description,
+            category: obligation.category,
+            dueDate: nextDueDate,
+            amount: obligation.amount,
+            currency: obligation.currency,
+            priority: obligation.priority,
+            status: 'active',
+            recurrence: obligation.recurrence,
+            notes: obligation.notes
+          });
+
+          // Record activity for next scheduled occurrence
+          await logActivity(userId, {
+            action: 'recurrence_generated',
+            resourceType: 'obligation',
+            resourceId: nextOccurrence._id,
+            title: nextOccurrence.title,
+            description: `Automatically scheduled next ${obligation.recurrence} cycle for "${nextOccurrence.title}" due ${nextDueDate.toISOString().split('T')[0]}`,
+            details: { recurrence: obligation.recurrence, dueDate: nextDueDate }
+          });
+
+          // Trigger lifecycle in-app notification
+          await createLifecycleNotification(userId, {
+            type: 'lifecycle',
+            title: `Next Recurrence Scheduled: ${nextOccurrence.title}`,
+            message: `"${nextOccurrence.title}" was marked complete, and the next cycle is scheduled for ${nextDueDate.toISOString().split('T')[0]}.`,
+            obligationId: nextOccurrence._id,
+            dedupSuffix: nextDueDate.toISOString().split('T')[0]
+          });
+        }
+      }
+    }
+
     res.status(200).json({
       success: true,
       data: result,
-      message: 'Obligation marked as completed'
+      nextOccurrence: nextOccurrence ? nextOccurrence.toJSON() : null,
+      message: nextOccurrence
+        ? 'Obligation completed and next recurrence scheduled'
+        : 'Obligation marked as completed'
     });
   } catch (err) {
     next(err);
@@ -233,9 +340,10 @@ const completeObligation = async (req, res, next) => {
  */
 const cancelObligation = async (req, res, next) => {
   try {
+    const userId = req.user.id;
     const obligation = await Obligation.findOne({
       _id: req.params.id,
-      userId: req.user.id
+      userId
     });
 
     if (!obligation) {
@@ -251,6 +359,16 @@ const cancelObligation = async (req, res, next) => {
     const result = obligation.toJSON();
     result.urgency = calculateUrgency(obligation.dueDate, obligation.status);
 
+    // Record activity
+    await logActivity(userId, {
+      action: 'cancelled',
+      resourceType: 'obligation',
+      resourceId: obligation._id,
+      title: obligation.title,
+      description: `Cancelled obligation "${obligation.title}"`,
+      details: { status: 'cancelled' }
+    });
+
     res.status(200).json({
       success: true,
       data: result,
@@ -262,14 +380,15 @@ const cancelObligation = async (req, res, next) => {
 };
 
 /**
- * Permanently delete an obligation
+ * Permanently delete an obligation and clean up associated physical files
  * DELETE /api/obligations/:id
  */
 const deleteObligation = async (req, res, next) => {
   try {
-    const obligation = await Obligation.findOneAndDelete({
+    const userId = req.user.id;
+    const obligation = await Obligation.findOne({
       _id: req.params.id,
-      userId: req.user.id
+      userId
     });
 
     if (!obligation) {
@@ -279,9 +398,232 @@ const deleteObligation = async (req, res, next) => {
       });
     }
 
+    // Clean up any attachment files from disk
+    if (obligation.attachments && obligation.attachments.length > 0) {
+      for (const att of obligation.attachments) {
+        if (att.storagePath) {
+          await deleteFile(att.storagePath);
+        }
+      }
+    }
+
+    await Obligation.deleteOne({ _id: obligation._id });
+
+    // Record activity with preserved title and details
+    await logActivity(userId, {
+      action: 'deleted',
+      resourceType: 'obligation',
+      resourceId: obligation._id,
+      title: obligation.title,
+      description: `Permanently deleted obligation "${obligation.title}"`,
+      details: { category: obligation.category, amount: obligation.amount }
+    });
+
     res.status(200).json({
       success: true,
       message: 'Obligation deleted successfully'
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * Feature A: Secure Document Attachments
+ * Upload an attachment to an owned obligation
+ * POST /api/obligations/:id/attachments
+ */
+const uploadAttachment = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const obligationId = req.params.id;
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No file uploaded or file was rejected by format filter'
+      });
+    }
+
+    const obligation = await Obligation.findOne({
+      _id: obligationId,
+      userId
+    });
+
+    if (!obligation) {
+      // Clean up the temporarily written file if the target obligation does not exist
+      await deleteFile(req.file.path);
+      return res.status(404).json({
+        success: false,
+        message: 'Obligation not found'
+      });
+    }
+
+    const attachmentData = {
+      filename: req.file.filename,
+      originalName: req.file.originalname,
+      mimeType: req.file.mimetype,
+      size: req.file.size,
+      storagePath: req.file.path,
+      url: `/api/obligations/${obligation._id}/attachments`,
+      uploadedAt: new Date()
+    };
+
+    obligation.attachments.push(attachmentData);
+    await obligation.save();
+
+    const createdAttachment = obligation.attachments[obligation.attachments.length - 1];
+
+    // Log activity
+    await logActivity(userId, {
+      action: 'attachment_uploaded',
+      resourceType: 'attachment',
+      resourceId: createdAttachment._id,
+      title: obligation.title,
+      description: `Attached document "${req.file.originalname}" to "${obligation.title}"`,
+      details: {
+        filename: req.file.originalname,
+        size: req.file.size,
+        mimeType: req.file.mimetype
+      }
+    });
+
+    res.status(201).json({
+      success: true,
+      data: createdAttachment.toJSON(),
+      message: 'Document attached successfully'
+    });
+  } catch (err) {
+    if (req.file && req.file.path) {
+      await deleteFile(req.file.path);
+    }
+    next(err);
+  }
+};
+
+/**
+ * Feature A: View an attachment inline
+ * GET /api/obligations/:id/attachments/:attachmentId/view
+ */
+const viewAttachment = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const { id: obligationId, attachmentId } = req.params;
+
+    const obligation = await Obligation.findOne({
+      _id: obligationId,
+      userId
+    });
+
+    if (!obligation) {
+      return res.status(404).json({
+        success: false,
+        message: 'Obligation not found'
+      });
+    }
+
+    const attachment = obligation.attachments.id(attachmentId);
+    if (!attachment || !attachment.storagePath || !fs.existsSync(attachment.storagePath)) {
+      return res.status(404).json({
+        success: false,
+        message: 'Attachment file not found'
+      });
+    }
+
+    res.setHeader('Content-Type', attachment.mimeType || 'application/octet-stream');
+    res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(attachment.originalName)}"`);
+    res.sendFile(path.resolve(attachment.storagePath));
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * Feature A: Download an attachment
+ * GET /api/obligations/:id/attachments/:attachmentId/download
+ */
+const downloadAttachment = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const { id: obligationId, attachmentId } = req.params;
+
+    const obligation = await Obligation.findOne({
+      _id: obligationId,
+      userId
+    });
+
+    if (!obligation) {
+      return res.status(404).json({
+        success: false,
+        message: 'Obligation not found'
+      });
+    }
+
+    const attachment = obligation.attachments.id(attachmentId);
+    if (!attachment || !attachment.storagePath || !fs.existsSync(attachment.storagePath)) {
+      return res.status(404).json({
+        success: false,
+        message: 'Attachment file not found'
+      });
+    }
+
+    res.download(path.resolve(attachment.storagePath), attachment.originalName);
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * Feature A: Delete an attachment without deleting the parent obligation
+ * DELETE /api/obligations/:id/attachments/:attachmentId
+ */
+const deleteAttachment = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const { id: obligationId, attachmentId } = req.params;
+
+    const obligation = await Obligation.findOne({
+      _id: obligationId,
+      userId
+    });
+
+    if (!obligation) {
+      return res.status(404).json({
+        success: false,
+        message: 'Obligation not found'
+      });
+    }
+
+    const attachment = obligation.attachments.id(attachmentId);
+    if (!attachment) {
+      return res.status(404).json({
+        success: false,
+        message: 'Attachment not found'
+      });
+    }
+
+    // Clean up physical file on disk
+    if (attachment.storagePath) {
+      await deleteFile(attachment.storagePath);
+    }
+
+    const originalName = attachment.originalName;
+    obligation.attachments.pull(attachmentId);
+    await obligation.save();
+
+    // Log activity
+    await logActivity(userId, {
+      action: 'attachment_deleted',
+      resourceType: 'attachment',
+      resourceId: attachmentId,
+      title: obligation.title,
+      description: `Removed document "${originalName}" from "${obligation.title}"`,
+      details: { filename: originalName }
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Attachment deleted successfully'
     });
   } catch (err) {
     next(err);
@@ -295,5 +637,9 @@ module.exports = {
   updateObligation,
   completeObligation,
   cancelObligation,
-  deleteObligation
+  deleteObligation,
+  uploadAttachment,
+  viewAttachment,
+  downloadAttachment,
+  deleteAttachment
 };

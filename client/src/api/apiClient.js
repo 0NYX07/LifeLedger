@@ -5,9 +5,10 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
  */
 async function request(endpoint, options = {}) {
   const token = localStorage.getItem('lifeledger_token');
+  const isFormData = options.body instanceof FormData;
 
   const headers = {
-    'Content-Type': 'application/json',
+    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     ...(options.headers || {})
   };
 
@@ -102,6 +103,46 @@ export const apiClient = {
     delete: (id) =>
       request(`/api/obligations/${id}`, {
         method: 'DELETE'
+      }),
+    // Document attachments
+    uploadAttachment: (id, formData) =>
+      request(`/api/obligations/${id}/attachments`, {
+        method: 'POST',
+        body: formData
+      }),
+    viewAttachmentUrl: (id, attachmentId) =>
+      `${API_BASE_URL}/api/obligations/${id}/attachments/${attachmentId}/view`,
+    downloadAttachmentUrl: (id, attachmentId) =>
+      `${API_BASE_URL}/api/obligations/${id}/attachments/${attachmentId}/download`,
+    deleteAttachment: (id, attachmentId) =>
+      request(`/api/obligations/${id}/attachments/${attachmentId}`, {
+        method: 'DELETE'
+      })
+  },
+  activity: {
+    list: (params = {}) => {
+      const query = new URLSearchParams();
+      Object.entries(params).forEach(([key, val]) => {
+        if (val !== undefined && val !== null && val !== '') {
+          query.append(key, val);
+        }
+      });
+      const queryString = query.toString();
+      return request(`/api/activity${queryString ? `?${queryString}` : ''}`);
+    }
+  },
+  notifications: {
+    list: () =>
+      request('/api/notifications', {
+        method: 'GET'
+      }),
+    markRead: (id) =>
+      request(`/api/notifications/${id}/read`, {
+        method: 'PATCH'
+      }),
+    markAllRead: () =>
+      request('/api/notifications/read-all', {
+        method: 'PATCH'
       })
   },
   dashboard: {

@@ -3,12 +3,14 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Navbar } from './components/Navbar';
 import { ObligationFormModal } from './components/ObligationFormModal';
+import { AttachmentModal } from './components/AttachmentModal';
 import { Toast } from './components/Toast';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
 import { Obligations } from './pages/Obligations';
 import { MoneyOutlook } from './pages/MoneyOutlook';
+import { ActivityHistory } from './pages/ActivityHistory';
 import { apiClient } from './api/apiClient';
 
 // Route protection component
@@ -53,6 +55,7 @@ const PublicRoute = ({ children }) => {
 function MainLayout() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingObligation, setEditingObligation] = useState(null);
+  const [attachmentModalObligation, setAttachmentModalObligation] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -72,6 +75,10 @@ function MainLayout() {
   const handleOpenEditModal = (obligation) => {
     setEditingObligation(obligation);
     setModalOpen(true);
+  };
+
+  const handleManageAttachments = (obligation) => {
+    setAttachmentModalObligation(obligation);
   };
 
   const handleModalSubmit = async (formData) => {
@@ -112,6 +119,7 @@ function MainLayout() {
                 <Dashboard
                   onOpenNewModal={handleOpenNewModal}
                   onEditObligation={handleOpenEditModal}
+                  onManageAttachments={handleManageAttachments}
                   onTriggerToast={triggerToast}
                   refreshKey={refreshKey}
                 />
@@ -125,6 +133,7 @@ function MainLayout() {
                 <Obligations
                   onOpenNewModal={handleOpenNewModal}
                   onEditObligation={handleOpenEditModal}
+                  onManageAttachments={handleManageAttachments}
                   onTriggerToast={triggerToast}
                   refreshKey={refreshKey}
                 />
@@ -136,6 +145,14 @@ function MainLayout() {
             element={
               <ProtectedRoute>
                 <MoneyOutlook refreshKey={refreshKey} />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/activity"
+            element={
+              <ProtectedRoute>
+                <ActivityHistory />
               </ProtectedRoute>
             }
           />
@@ -180,6 +197,24 @@ function MainLayout() {
         onSubmit={handleModalSubmit}
         initialData={editingObligation}
         isSubmitting={isSubmitting}
+      />
+
+      <AttachmentModal
+        isOpen={Boolean(attachmentModalObligation)}
+        obligation={attachmentModalObligation}
+        onClose={() => setAttachmentModalObligation(null)}
+        onAttachmentChanged={() => {
+          setRefreshKey((k) => k + 1);
+          if (attachmentModalObligation) {
+            apiClient.obligations
+              .get(attachmentModalObligation._id)
+              .then((res) => {
+                if (res.success) setAttachmentModalObligation(res.data);
+              })
+              .catch(() => {});
+          }
+        }}
+        onTriggerToast={triggerToast}
       />
 
       <Toast toast={toast} onClose={() => setToast(null)} />

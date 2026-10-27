@@ -8,6 +8,8 @@ const errorHandler = require('./middleware/errorHandler');
 const authRoutes = require('./routes/auth.routes');
 const obligationRoutes = require('./routes/obligation.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
+const activityRoutes = require('./routes/activity.routes');
+const notificationRoutes = require('./routes/notification.routes');
 
 const app = express();
 
@@ -50,6 +52,8 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/obligations', obligationRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/activity', activityRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Catch-all for undefined API routes
 app.use('/api/*', (req, res) => {

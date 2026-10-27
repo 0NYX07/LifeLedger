@@ -7,7 +7,8 @@ import {
   Trash2,
   Repeat,
   AlertCircle,
-  FileText
+  FileText,
+  Paperclip
 } from 'lucide-react';
 import {
   formatCurrency,
@@ -23,7 +24,8 @@ export const ObligationCard = ({
   onEdit,
   onComplete,
   onCancel,
-  onDelete
+  onDelete,
+  onManageAttachments
 }) => {
   const isCompleted = obligation.status === 'completed';
   const isCancelled = obligation.status === 'cancelled';
@@ -136,6 +138,21 @@ export const ObligationCard = ({
                 <XCircle className="w-4 h-4" />
               </button>
             </>
+          )}
+
+          {onManageAttachments && (
+            <button
+              onClick={() => onManageAttachments(obligation)}
+              title="Manage Attachments"
+              className="relative p-1.5 rounded-lg text-slate-400 hover:text-purple-400 hover:bg-purple-500/10 transition-colors"
+            >
+              <Paperclip className="w-4 h-4" />
+              {obligation.attachments && obligation.attachments.length > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-purple-500 px-0.5 text-[9px] font-bold text-white">
+                  {obligation.attachments.length}
+                </span>
+              )}
+            </button>
           )}
 
           <button

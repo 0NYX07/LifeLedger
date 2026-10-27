@@ -42,7 +42,13 @@ const URGENCIES = [
   { value: 'upcoming', label: 'Upcoming' }
 ];
 
-export const Obligations = ({ onOpenNewModal, onEditObligation, onTriggerToast, refreshKey = 0 }) => {
+export const Obligations = ({
+  onOpenNewModal,
+  onEditObligation,
+  onManageAttachments,
+  onTriggerToast,
+  refreshKey = 0
+}) => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [search, setSearch] = useState(searchParams.get('search') || '');
@@ -325,6 +331,7 @@ export const Obligations = ({ onOpenNewModal, onEditObligation, onTriggerToast, 
               onComplete={handleComplete}
               onCancel={handleCancel}
               onDelete={handleDelete}
+              onManageAttachments={onManageAttachments}
             />
           ))}
         </div>

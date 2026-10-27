@@ -18,7 +18,13 @@ import {
 } from 'lucide-react';
 import { formatCurrency } from '../utils/formatters';
 
-export const Dashboard = ({ onOpenNewModal, onEditObligation, onTriggerToast, refreshKey = 0 }) => {
+export const Dashboard = ({
+  onOpenNewModal,
+  onEditObligation,
+  onManageAttachments,
+  onTriggerToast,
+  refreshKey = 0
+}) => {
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState(null);
   const [error, setError] = useState(null);
@@ -331,6 +337,7 @@ export const Dashboard = ({ onOpenNewModal, onEditObligation, onTriggerToast, re
                   onComplete={handleComplete}
                   onCancel={handleCancel}
                   onDelete={handleDelete}
+                  onManageAttachments={onManageAttachments}
                 />
               ))}
             </div>
@@ -374,6 +381,7 @@ export const Dashboard = ({ onOpenNewModal, onEditObligation, onTriggerToast, re
                   onComplete={handleComplete}
                   onCancel={handleCancel}
                   onDelete={handleDelete}
+                  onManageAttachments={onManageAttachments}
                 />
               ))}
             </div>

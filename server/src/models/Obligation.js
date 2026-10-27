@@ -21,11 +21,19 @@ const attachmentSchema = new mongoose.Schema(
     originalName: { type: String, required: true },
     mimeType: { type: String },
     size: { type: Number },
+    storagePath: { type: String },
     url: { type: String },
     uploadedAt: { type: Date, default: Date.now }
   },
   { _id: true }
 );
+
+attachmentSchema.set('toJSON', {
+  transform: (doc, ret) => {
+    delete ret.storagePath;
+    return ret;
+  }
+});
 
 const obligationSchema = new mongoose.Schema(
   {
